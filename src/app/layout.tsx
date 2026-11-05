@@ -21,15 +21,16 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "SNR CERTIFICATE PORTAL",
-  description: "Create and verify internship completion certificates.",
+  title: "SNR EDATAS CERTIFICATE STUDIO",
+  description:
+    "Enterprise certificate builder and verification portal for SNR Edatas Private Limited. Generate CMMI Level 5, Participation, Internship, and custom certificates.",
   icons: {
     icon: "/icon.png",
     shortcut: "/icon.png",
     apple: "/icon.png",
   },
   openGraph: {
-    title: "SNR CERTIFICATE PORTAL",
+    title: "SNR EDATAS CERTIFICATE STUDIO",
     type: "website",
   },
 };

@@ -55,11 +55,14 @@ export default function LoginPage() {
               style={{ fontFamily: "var(--font-cormorant)" }}
               className="text-3xl font-semibold text-[#1f2536] tracking-wide"
             >
-              Certificate Portal
+              Certificate Studio
             </h1>
-            <p className="text-sm text-[#6b6657] mt-2">
-              Sign in to manage and generate certificates
+            <p className="text-sm text-[#6b6657] mt-1.5 text-center">
+              SNR Edatas Central Certificate &amp; Verification Portal
             </p>
+            <div className="mt-3 px-3 py-1 bg-[#b8862e]/10 border border-[#b8862e]/30 rounded-full text-[11px] font-semibold text-[#b8862e] tracking-wider uppercase">
+              CMMI Level 5 &bull; Enterprise
+            </div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
@@ -138,6 +141,17 @@ export default function LoginPage() {
               ) : (
                 "Sign In"
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("hr@snredatas.com");
+                setPassword("123456");
+              }}
+              className="w-full text-xs text-[#6b6657] hover:text-[#1f2536] text-center pt-1 underline transition-colors"
+            >
+              Fill Demo Credentials (hr@snredatas.com)
             </button>
           </form>
         </div>

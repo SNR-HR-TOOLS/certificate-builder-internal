@@ -4,36 +4,157 @@ import snrWatermark from "@/assets/snr-logo-without-bg-water-mark.png";
 import { forwardRef, useEffect, useRef, useState } from "react";
 
 export interface TemplateProps {
+  // Brand & Header
   logo: string;
+  organization?: string;
   title: string;
+  subtitle?: string;
+  presentationLine?: string;
+
+  // Recipient & Body
   name: string;
+  nameFont?: "script" | "serif" | "sans";
   body: string;
-  period: string;
-  ceoName: string;
-  ceoRole: string;
-  sigImg: string;
-  hrName: string;
-  hrRole: string;
-  sigImgRight: string;
+
+  // Period / Timing
+  periodLabel?: string;
+  period?: string;
+  showPeriod?: boolean;
+
+  // Signatory 1 (Left)
+  sig1Name?: string;
+  sig1Role?: string;
+  sig1Org?: string;
+  sig1Img?: string;
+
+  // Signatory 2 (Right)
+  sig2Name?: string;
+  sig2Role?: string;
+  sig2Org?: string;
+  sig2Img?: string;
+
+  // Metadata
   serial: string;
+  idLabel?: string;
   date: string;
+  dateLabel?: string;
+
+  // Options
   showWatermark: boolean;
+  showQrCode?: boolean;
+  qrDataUrl?: string;
+
+  // Backward-compatibility aliases
+  ceoName?: string;
+  ceoRole?: string;
+  sigImg?: string;
+  hrName?: string;
+  hrRole?: string;
+  sigImgRight?: string;
 }
 
-/* ─── Recipient name with auto-shrink ─────────────────────────── */
+/* ─── Normalize Props ─────────────────────────────────────────── */
+function normalizeProps(props: TemplateProps) {
+  return {
+    logo: props.logo,
+    organization: props.organization ?? "SNR Edatas Private Limited",
+    title: props.title || "CERTIFICATE OF PARTICIPATION",
+    subtitle: props.subtitle ?? "",
+    presentationLine:
+      props.presentationLine ?? "This certificate is proudly presented to",
+    name: props.name || "Recipient Name",
+    nameFont: props.nameFont ?? "script",
+    body: props.body || "",
+    periodLabel: props.periodLabel ?? "Training Period",
+    period: props.period ?? "",
+    showPeriod: props.showPeriod !== false && Boolean(props.period),
+    sig1Name: props.sig1Name ?? props.ceoName ?? "Authorized Signatory",
+    sig1Role: props.sig1Role ?? props.ceoRole ?? "Authorized Signatory",
+    sig1Org: props.sig1Org ?? "",
+    sig1Img: props.sig1Img ?? props.sigImg ?? "",
+    sig2Name: props.sig2Name ?? props.hrName ?? "Managing Director",
+    sig2Role: props.sig2Role ?? props.hrRole ?? "SNR Edatas Private Limited",
+    sig2Org: props.sig2Org ?? "SNR Edatas Private Limited",
+    sig2Img: props.sig2Img ?? props.sigImgRight ?? "",
+    serial: props.serial || "SNR-CERT-001",
+    idLabel: props.idLabel ?? "CERTIFICATE ID",
+    date: props.date || new Date().toLocaleDateString("en-GB"),
+    dateLabel: props.dateLabel ?? "DATE",
+    showWatermark: props.showWatermark,
+    showQrCode: Boolean(props.showQrCode && props.qrDataUrl),
+    qrDataUrl: props.qrDataUrl,
+  };
+}
+
+/* ─── Helper: Format & Highlight Body Text ─────────────────────── */
+function renderFormattedBody(
+  text: string,
+  highlightColor = "font-bold text-[#1f2536]",
+) {
+  if (!text) return null;
+  const lines = text.split("\n");
+  const regex =
+    /(SNR Edatas Private Limited|SNR Edatas|CMMI Level 5|CMMI LEVEL 5)/g;
+
+  return (
+    <>
+      {lines.map((line, lIdx) => {
+        const parts = line.split(regex);
+        return (
+          <span key={lIdx} className="block leading-relaxed">
+            {parts.map((part, pIdx) => {
+              if (
+                part === "SNR Edatas Private Limited" ||
+                part === "SNR Edatas" ||
+                part === "CMMI Level 5" ||
+                part === "CMMI LEVEL 5"
+              ) {
+                return (
+                  <strong key={pIdx} className={highlightColor}>
+                    {part}
+                  </strong>
+                );
+              }
+              return <span key={pIdx}>{part}</span>;
+            })}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
+/* ─── Recipient name with dynamic font style & auto-shrink ────── */
 function RecipientName({
   name,
   align = "center",
-  width = 680,
+  width = 720,
+  font = "script",
+  textColor = "text-[#1f2536]",
+  lineColor = "bg-[#1f2536]/40",
+  showUnderline = true,
 }: {
   name: string;
-  align?: "center" | "left";
+  align?: "center" | "left" | "right";
   width?: number;
+  font?: "script" | "serif" | "sans";
+  textColor?: string;
+  lineColor?: string;
+  showUnderline?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLHeadingElement>(null);
-  const [fontSize, setFontSize] = useState(72);
-  const [underlineWidth, setUnderlineWidth] = useState(200);
+
+  const baseSize = font === "script" ? 64 : font === "serif" ? 44 : 38;
+  const [fontSize, setFontSize] = useState(baseSize);
+  const [underlineWidth, setUnderlineWidth] = useState(220);
+
+  const fontFamily =
+    font === "script"
+      ? "var(--font-great-vibes)"
+      : font === "serif"
+        ? "var(--font-cormorant)"
+        : "var(--font-montserrat)";
 
   useEffect(() => {
     const container = containerRef.current;
@@ -42,86 +163,235 @@ function RecipientName({
 
     const fit = () => {
       const maxWidth = container.clientWidth || width;
-      let size = 72;
+      let size = baseSize;
       text.style.fontSize = `${size}px`;
 
-      while (size > 28 && text.scrollWidth > maxWidth) {
+      while (size > 22 && text.scrollWidth > maxWidth) {
         size -= 1;
         text.style.fontSize = `${size}px`;
       }
 
       setFontSize(size);
-      setUnderlineWidth(Math.min(text.scrollWidth + 16, maxWidth));
+      setUnderlineWidth(Math.min(text.scrollWidth + 24, maxWidth));
     };
 
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(container);
     return () => observer.disconnect();
-  }, [name, width]);
+  }, [name, width, baseSize, font]);
 
   return (
     <div
       ref={containerRef}
-      className={`mt-8 w-full max-w-[${width}px] flex flex-col ${align === "center" ? "items-center" : "items-start"} px-4`}
+      className={`mt-4 w-full flex flex-col ${
+        align === "center"
+          ? "items-center"
+          : align === "right"
+            ? "items-end"
+            : "items-start"
+      } px-4`}
+      style={{ maxWidth: `${width}px` }}
     >
       <h2
         ref={textRef}
         style={{
-          fontFamily: "var(--font-great-vibes)",
+          fontFamily,
           fontSize: `${fontSize}px`,
+          fontWeight: font === "script" ? 400 : font === "serif" ? 600 : 700,
         }}
-        className="leading-none whitespace-nowrap text-[#1f2536] max-w-full"
+        className={`leading-none whitespace-nowrap ${textColor} max-w-full tracking-wide`}
       >
         {name || "\u00A0"}
       </h2>
-      <div
-        className="mt-2 h-px bg-[#1f2536]/50 transition-all duration-150"
-        style={{ width: underlineWidth }}
-      />
+      {showUnderline && (
+        <div
+          className={`mt-2 h-[1.5px] ${lineColor} transition-all duration-150`}
+          style={{ width: underlineWidth }}
+        />
+      )}
     </div>
   );
 }
 
-/* ─── Signature block (left / right / center) ──────────────────────────── */
+/* ─── Subtitle / Program Badge ────────────────────────────────── */
+function SubtitleBadge({
+  subtitle,
+  variant = "gold",
+  className = "",
+}: {
+  subtitle?: string;
+  variant?: "gold" | "navy" | "dark" | "outline";
+  className?: string;
+}) {
+  if (!subtitle) return null;
+  const styles = {
+    gold: "bg-[#b8862e]/10 border border-[#b8862e]/50 text-[#b8862e]",
+    navy: "bg-[#1f2536]/10 border border-[#1f2536]/30 text-[#1f2536]",
+    dark: "bg-[#b8862e]/20 border border-[#b8862e]/60 text-[#d4af37]",
+    outline: "border border-current opacity-85",
+  };
+  return (
+    <div
+      className={`inline-flex items-center gap-2 px-3.5 py-0.5 rounded-full text-[11px] font-bold tracking-[0.24em] uppercase shadow-xs ${styles[variant]} ${className}`}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-75" />
+      {subtitle}
+      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-75" />
+    </div>
+  );
+}
+
+/* ─── Signature Block ─────────────────────────────────────────── */
 function SignatureBlock({
   align,
   signature,
   name,
   role,
+  org,
+  dark = false,
 }: {
   align: "left" | "right" | "center";
-  signature: string;
+  signature?: string;
   name: string;
   role: string;
+  org?: string;
+  dark?: boolean;
 }) {
   const isRight = align === "right";
   const isCenter = align === "center";
   return (
     <div
-      className={`flex flex-col ${isRight ? "items-end text-right" : isCenter ? "items-center text-center" : "items-start text-left"}`}
+      className={`flex flex-col ${
+        isRight
+          ? "items-end text-right"
+          : isCenter
+            ? "items-center text-center"
+            : "items-start text-left"
+      }`}
     >
-      {signature ? (
-        <img
-          src={signature}
-          alt="signature"
-          className="h-32 object-contain -mb-10 max-w-[350px] scale-[1.15]"
-        />
-      ) : (
-        <div className="h-32" />
-      )}
-      <div className="w-[220px] h-px bg-[#1f2536]/60 mt-1" />
-      <p className="mt-2 text-[13px] font-semibold tracking-wide text-[#1f2536]">
+      <div className="h-14 flex items-end justify-center mb-1">
+        {signature ? (
+          <img
+            src={signature}
+            alt="signature"
+            className="max-h-14 max-w-[180px] object-contain"
+            style={dark ? { filter: "brightness(0) invert(1)" } : undefined}
+          />
+        ) : (
+          <div className="h-14" />
+        )}
+      </div>
+      <div
+        className={`w-[180px] h-[1.5px] ${
+          dark ? "bg-white/30" : "bg-[#1f2536]/50"
+        }`}
+      />
+      <p
+        className={`mt-1.5 text-[12.5px] font-bold tracking-wide ${
+          dark ? "text-white" : "text-[#1f2536]"
+        }`}
+      >
         {name}
       </p>
-      <p className="text-[12px] text-[#1f2536]/70 mt-0.5">{role}</p>
+      <p
+        className={`text-[11px] mt-0.5 font-medium ${
+          dark ? "text-[#f8f9fa]/75" : "text-[#1f2536]/75"
+        }`}
+      >
+        {role}
+      </p>
+      {org && org !== role && (
+        <p
+          className={`text-[10px] mt-0.5 ${
+            dark ? "text-[#f8f9fa]/50" : "text-[#1f2536]/60"
+          }`}
+        >
+          {org}
+        </p>
+      )}
     </div>
   );
 }
 
-/* ─── 1. Classic Template (Base) ──────────────────────────── */
+/* ─── Metadata Footer (ID & Date + optional QR) ───────────────── */
+function MetadataFooter({
+  idLabel = "CERTIFICATE ID",
+  serial,
+  dateLabel = "DATE",
+  date,
+  qrDataUrl,
+  showQrCode = false,
+  dark = false,
+  align = "between",
+}: {
+  idLabel?: string;
+  serial: string;
+  dateLabel?: string;
+  date: string;
+  qrDataUrl?: string;
+  showQrCode?: boolean;
+  dark?: boolean;
+  align?: "between" | "center" | "right";
+}) {
+  return (
+    <div
+      className={`w-full flex items-center ${
+        align === "center"
+          ? "justify-center"
+          : align === "right"
+            ? "justify-end"
+            : "justify-between"
+      } text-[10px] uppercase tracking-[0.16em] ${
+        dark ? "text-[#f8f9fa]/60" : "text-[#1f2536]/65"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <span>
+          {idLabel}:{" "}
+          <strong className={dark ? "text-white" : "text-[#1f2536]"}>
+            {serial}
+          </strong>
+        </span>
+        <span className="opacity-40 font-light">|</span>
+        <span>
+          {dateLabel}:{" "}
+          <strong className={dark ? "text-white" : "text-[#1f2536]"}>
+            {date}
+          </strong>
+        </span>
+      </div>
+
+      {showQrCode && qrDataUrl && (
+        <div
+          className={`flex items-center gap-1.5 px-2 py-0.5 rounded ${
+            dark
+              ? "bg-white text-[#1f2536]"
+              : "bg-white border border-[#d8d4c8] text-[#1f2536]"
+          } shadow-xs`}
+        >
+          <img
+            src={qrDataUrl}
+            alt="Verification QR Code"
+            className="w-7 h-7 object-contain"
+          />
+          <div className="text-[7px] font-bold leading-tight uppercase tracking-wider">
+            Verified
+            <br />
+            Credential
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+   1. Classic Template (Base / Flagship)
+   ──────────────────────────────────────────────────────────────── */
 export const ClassicTemplate = forwardRef<HTMLDivElement, TemplateProps>(
-  (props, ref) => {
+  (rawProps, ref) => {
+    const p = normalizeProps(rawProps);
     return (
       <div
         ref={ref}
@@ -132,93 +402,99 @@ export const ClassicTemplate = forwardRef<HTMLDivElement, TemplateProps>(
             "radial-gradient(circle at center, #ffffff 0%, #f6f2e7 100%)",
         }}
       >
-        {/* decorative double border */}
+        {/* Decorative double border */}
         <div className="absolute inset-[16px] border border-[#b8a98a]/60 pointer-events-none" />
         <div className="absolute inset-[23px] border border-[#b8a98a]/30 pointer-events-none" />
 
-        {/* Watermark — centered behind content */}
-        {props.showWatermark && (
+        {/* Watermark */}
+        {p.showWatermark && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1]">
             <img
               src={snrWatermark.src}
               alt="watermark"
-              className="w-[55%] max-w-[420px] object-contain opacity-[0.07]"
+              className="w-[52%] max-w-[400px] object-contain opacity-[0.06]"
             />
           </div>
         )}
 
-        {/* content */}
-        <div className="relative z-10 h-full flex flex-col items-center px-20 pt-10 pb-8 text-[#1f2536]">
-          {/* Logo */}
-          <div className="flex items-center justify-center">
+        {/* Content */}
+        <div className="relative z-10 h-full flex flex-col items-center justify-between px-16 pt-9 pb-7 text-[#1f2536]">
+          {/* Header */}
+          <div className="flex flex-col items-center">
             <img
-              src={props.logo}
+              src={p.logo}
               alt="Company logo"
               className="object-contain"
-              style={{ width: "180px", height: "100%" }}
+              style={{ width: "160px", height: "auto", maxHeight: "48px" }}
             />
+            <div className="mt-2.5 w-24 h-px bg-[#b8862e]/60" />
+            <h1
+              style={{ fontFamily: "var(--font-cormorant)" }}
+              className="mt-3 text-[42px] leading-tight font-semibold text-center tracking-wide uppercase"
+            >
+              {p.title}
+            </h1>
+            {p.subtitle && (
+              <div className="mt-1.5">
+                <SubtitleBadge subtitle={p.subtitle} variant="gold" />
+              </div>
+            )}
           </div>
 
-          {/* thin gold rule under logo */}
-          <div className="mt-4 w-24 h-px bg-[#b8862e]/60" />
+          {/* Recipient Section */}
+          <div className="w-full flex flex-col items-center my-auto">
+            {p.presentationLine && (
+              <p
+                style={{ fontFamily: "var(--font-cormorant)" }}
+                className="text-[15px] italic text-[#1f2536]/75 tracking-wide"
+              >
+                {p.presentationLine}
+              </p>
+            )}
+            <RecipientName name={p.name} font={p.nameFont} />
 
-          {/* Certificate title */}
-          <h1
-            style={{ fontFamily: "var(--font-cormorant)" }}
-            className="mt-5 text-[54px] leading-none font-semibold text-center tracking-wide"
-          >
-            {props.title}
-          </h1>
+            <div className="mt-4 max-w-[700px] text-center text-[13.5px] text-[#1f2536]/90 font-normal">
+              {renderFormattedBody(p.body)}
+            </div>
 
-          {/* Recipient name */}
-          <RecipientName name={props.name} />
+            {p.showPeriod && (
+              <p className="mt-3 text-[13px] tracking-wide text-[#1f2536]/80">
+                {p.periodLabel}:{" "}
+                <strong className="font-semibold text-[#1f2536]">
+                  {p.period}
+                </strong>
+              </p>
+            )}
+          </div>
 
-          {/* Body text */}
-          <p className="mt-7 max-w-[680px] text-center text-[14.5px] leading-[1.9] whitespace-pre-wrap text-[#1f2536]/90">
-            {props.body.split("SNR Edatas").map((part, index, array) => (
-              <span key={index}>
-                {part}
-                {index < array.length - 1 && (
-                  <strong className="font-bold text-[#1f2536]">
-                    SNR Edatas
-                  </strong>
-                )}
-              </span>
-            ))}
-          </p>
-
-          {/* Internship period */}
-          <p className="mt-5 text-[14px] tracking-wide">
-            Internship Period:{" "}
-            <strong className="font-semibold">{props.period}</strong>
-          </p>
-
-          {/* Signatures + footer */}
-          <div className="mt-auto w-full">
+          {/* Signatures + Footer */}
+          <div className="w-full mt-auto">
             <div className="grid grid-cols-2 gap-8 items-end">
               <SignatureBlock
                 align="left"
-                signature={props.sigImg}
-                name={props.ceoName}
-                role={props.ceoRole}
+                signature={p.sig1Img}
+                name={p.sig1Name}
+                role={p.sig1Role}
+                org={p.sig1Org}
               />
               <SignatureBlock
                 align="right"
-                signature={props.sigImgRight}
-                name={props.hrName}
-                role={props.hrRole}
+                signature={p.sig2Img}
+                name={p.sig2Name}
+                role={p.sig2Role}
+                org={p.sig2Org}
               />
             </div>
 
-            <div className="mt-5 pt-3 border-t border-[#1f2536]/12 flex flex-wrap justify-center gap-x-10 gap-y-1 text-[10.5px] text-[#1f2536]/60 tracking-widest uppercase">
-              <span>
-                ID.&nbsp;
-                <strong className="text-[#1f2536]/80">{props.serial}</strong>
-              </span>
-              <span>
-                Date of Certification&nbsp;
-                <strong className="text-[#1f2536]/80">{props.date}</strong>
-              </span>
+            <div className="mt-4 pt-2.5 border-t border-[#1f2536]/12">
+              <MetadataFooter
+                idLabel={p.idLabel}
+                serial={p.serial}
+                dateLabel={p.dateLabel}
+                date={p.date}
+                qrDataUrl={p.qrDataUrl}
+                showQrCode={p.showQrCode}
+              />
             </div>
           </div>
         </div>
@@ -228,102 +504,118 @@ export const ClassicTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 );
 ClassicTemplate.displayName = "ClassicTemplate";
 
-/* ─── 2. Modern Template ──────────────────────────── */
+/* ────────────────────────────────────────────────────────────────
+   2. Modern Template
+   ──────────────────────────────────────────────────────────────── */
 export const ModernTemplate = forwardRef<HTMLDivElement, TemplateProps>(
-  (props, ref) => {
+  (rawProps, ref) => {
+    const p = normalizeProps(rawProps);
     return (
       <div
         ref={ref}
         className="relative w-full max-w-[1100px] aspect-[1.414/1] shadow-2xl overflow-hidden bg-white flex"
       >
-        {/* Left Accent Bar */}
-        <div className="w-[40px] h-full bg-[#1f2536] shrink-0" />
-        <div className="w-[8px] h-full bg-[#b8862e] shrink-0" />
+        {/* Left Accent Bars */}
+        <div className="w-[36px] h-full bg-[#1f2536] shrink-0" />
+        <div className="w-[7px] h-full bg-[#b8862e] shrink-0" />
 
-        {/* Watermark — centered in remaining space */}
-        {props.showWatermark && (
-          <div className="absolute inset-0 pl-[48px] flex items-center justify-center pointer-events-none z-[1]">
+        {/* Watermark */}
+        {p.showWatermark && (
+          <div className="absolute inset-0 pl-[44px] flex items-center justify-center pointer-events-none z-[1]">
             <img
               src={snrWatermark.src}
               alt="watermark"
-              className="w-[50%] max-w-[400px] object-contain opacity-[0.05]"
+              className="w-[48%] max-w-[380px] object-contain opacity-[0.05]"
             />
           </div>
         )}
 
         {/* Content Area */}
-        <div className="relative z-10 flex-1 h-full flex flex-col justify-between px-16 py-12 text-[#1f2536]">
+        <div className="relative z-10 flex-1 h-full flex flex-col justify-between px-14 py-9 text-[#1f2536]">
           {/* Header Row */}
           <div className="flex items-start justify-between w-full">
             <div className="flex-1">
               <h1
                 style={{ fontFamily: "var(--font-cormorant)" }}
-                className="text-[48px] leading-tight font-bold tracking-wider uppercase text-[#1f2536]"
+                className="text-[40px] leading-tight font-bold tracking-wider uppercase text-[#1f2536]"
               >
-                {props.title}
+                {p.title}
               </h1>
-              <div className="mt-3 w-16 h-[3px] bg-[#b8862e]" />
+              <div className="flex items-center gap-3 mt-1.5">
+                <div className="w-14 h-[2.5px] bg-[#b8862e]" />
+                {p.subtitle && (
+                  <SubtitleBadge subtitle={p.subtitle} variant="gold" />
+                )}
+              </div>
             </div>
-            <div className="shrink-0 ml-8">
+            <div className="shrink-0 ml-6">
               <img
-                src={props.logo}
+                src={p.logo}
                 alt="Company logo"
-                className="object-contain"
-                style={{ width: "160px", height: "100%" }}
+                className="object-contain max-h-[46px] w-auto"
               />
             </div>
           </div>
 
           {/* Recipient Section */}
-          <div className="mt-6 flex-1 flex flex-col justify-center">
-            <RecipientName name={props.name} align="left" width={700} />
+          <div className="my-auto flex flex-col justify-center">
+            {p.presentationLine && (
+              <p className="text-[13px] uppercase tracking-[0.2em] text-[#1f2536]/60 font-semibold mb-1">
+                {p.presentationLine}
+              </p>
+            )}
+            <RecipientName
+              name={p.name}
+              align="left"
+              width={720}
+              font={p.nameFont}
+            />
 
-            <p className="mt-8 max-w-[700px] text-[15px] leading-[1.8] whitespace-pre-wrap text-[#1f2536]/90 border-l-[3px] border-[#d8d4c8] pl-5">
-              {props.body.split("SNR Edatas").map((part, index, array) => (
-                <span key={index}>
-                  {part}
-                  {index < array.length - 1 && (
-                    <strong className="font-bold text-[#1f2536]">
-                      SNR Edatas
-                    </strong>
-                  )}
-                </span>
-              ))}
-            </p>
+            <div className="mt-4 max-w-[720px] text-[14px] text-[#1f2536]/90 border-l-[3px] border-[#b8862e] pl-4">
+              {renderFormattedBody(p.body)}
+            </div>
 
-            <p className="mt-6 text-[14px] tracking-wide pl-6">
-              Internship Period:{" "}
-              <strong className="font-semibold text-[#b8862e]">
-                {props.period}
-              </strong>
-            </p>
+            {p.showPeriod && (
+              <p className="mt-3 text-[13px] tracking-wide pl-4">
+                {p.periodLabel}:{" "}
+                <strong className="font-semibold text-[#b8862e]">
+                  {p.period}
+                </strong>
+              </p>
+            )}
           </div>
 
           {/* Footer Row */}
-          <div className="w-full flex justify-between items-end mt-8 border-t border-[#1f2536]/10 pt-6">
-            <div className="flex gap-16">
-              <SignatureBlock
-                align="left"
-                signature={props.sigImg}
-                name={props.ceoName}
-                role={props.ceoRole}
-              />
-              <SignatureBlock
-                align="left"
-                signature={props.sigImgRight}
-                name={props.hrName}
-                role={props.hrRole}
-              />
-            </div>
+          <div className="w-full mt-auto">
+            <div className="flex justify-between items-end border-t border-[#1f2536]/10 pt-4">
+              <div className="flex gap-14">
+                <SignatureBlock
+                  align="left"
+                  signature={p.sig1Img}
+                  name={p.sig1Name}
+                  role={p.sig1Role}
+                  org={p.sig1Org}
+                />
+                <SignatureBlock
+                  align="left"
+                  signature={p.sig2Img}
+                  name={p.sig2Name}
+                  role={p.sig2Role}
+                  org={p.sig2Org}
+                />
+              </div>
 
-            <div className="flex flex-col items-end gap-1 text-[11px] text-[#1f2536]/60 tracking-widest uppercase">
-              <span>
-                ID.{" "}
-                <strong className="text-[#1f2536]/90">{props.serial}</strong>
-              </span>
-              <span>
-                Date <strong className="text-[#1f2536]/90">{props.date}</strong>
-              </span>
+              <div className="w-[340px]">
+                <MetadataFooter
+                  idLabel={p.idLabel}
+                  serial={p.serial}
+                  dateLabel={p.dateLabel}
+                  date={p.date}
+                  qrDataUrl={p.qrDataUrl}
+                  showQrCode={p.showQrCode}
+                  align="right"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -333,93 +625,102 @@ export const ModernTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 );
 ModernTemplate.displayName = "ModernTemplate";
 
-/* ─── 3. Minimalist Template ──────────────────────────── */
+/* ────────────────────────────────────────────────────────────────
+   3. Minimalist Template
+   ──────────────────────────────────────────────────────────────── */
 export const MinimalistTemplate = forwardRef<HTMLDivElement, TemplateProps>(
-  (props, ref) => {
+  (rawProps, ref) => {
+    const p = normalizeProps(rawProps);
     return (
       <div
         ref={ref}
         className="relative w-full max-w-[1100px] aspect-[1.414/1] shadow-2xl overflow-hidden bg-[#faf9f5]"
       >
-        {/* Outer subtle border only */}
         <div className="absolute inset-[10px] border border-[#e6e1d2] pointer-events-none" />
 
-        {/* Watermark — very subtle in Minimalist */}
-        {props.showWatermark && (
+        {p.showWatermark && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1]">
             <img
               src={snrWatermark.src}
               alt="watermark"
-              className="w-[45%] max-w-[350px] object-contain opacity-[0.04] grayscale"
+              className="w-[42%] max-w-[340px] object-contain opacity-[0.04] grayscale"
             />
           </div>
         )}
 
-        {/* Content Area */}
-        <div className="relative z-10 h-full flex flex-col items-center justify-center px-24 py-16 text-[#2d313a]">
+        <div className="relative z-10 h-full flex flex-col items-center justify-between px-16 py-10 text-[#2d313a]">
           {/* Logo */}
-          <div className="absolute top-12 left-1/2 -translate-x-1/2">
+          <div className="flex flex-col items-center">
             <img
-              src={props.logo}
+              src={p.logo}
               alt="Company logo"
-              className="object-contain"
-              style={{ width: "120px", height: "100%" }}
+              className="object-contain max-h-[44px] w-auto"
             />
+            <h1 className="mt-3 text-[18px] uppercase tracking-[0.3em] font-medium text-[#7a7263]">
+              {p.title}
+            </h1>
+            {p.subtitle && (
+              <div className="mt-1.5">
+                <SubtitleBadge subtitle={p.subtitle} variant="navy" />
+              </div>
+            )}
           </div>
 
-          <div className="flex-1 flex flex-col items-center justify-center w-full mt-10">
-            <h1 className="text-[20px] uppercase tracking-[0.3em] font-medium text-[#7a7263] mb-8">
-              {props.title}
-            </h1>
+          {/* Recipient */}
+          <div className="my-auto flex flex-col items-center w-full">
+            {p.presentationLine && (
+              <p className="text-[12.5px] uppercase tracking-[0.25em] text-[#7a7263]/70 font-semibold mb-1">
+                {p.presentationLine}
+              </p>
+            )}
+            <RecipientName
+              name={p.name}
+              font={p.nameFont}
+              lineColor="bg-[#b8862e]"
+            />
 
-            <h2
-              style={{ fontFamily: "var(--font-cormorant)" }}
-              className="text-[64px] font-medium leading-none text-[#1b1c20]"
-            >
-              {props.name}
-            </h2>
-            <div className="w-12 h-px bg-[#b8862e] my-8" />
+            <div className="mt-4 max-w-[680px] text-center text-[13.5px] text-[#50545e] font-light leading-relaxed">
+              {renderFormattedBody(p.body, "font-semibold text-[#1b1c20]")}
+            </div>
 
-            <p className="max-w-[700px] text-center text-[15px] leading-[2] whitespace-pre-wrap text-[#50545e] font-light">
-              {props.body.split("SNR Edatas").map((part, index, array) => (
-                <span key={index}>
-                  {part}
-                  {index < array.length - 1 && (
-                    <strong className="font-medium text-[#1b1c20]">
-                      SNR Edatas
-                    </strong>
-                  )}
-                </span>
-              ))}
-            </p>
-
-            <p className="mt-8 text-[13px] tracking-widest text-[#7a7263] uppercase">
-              Period /{" "}
-              <strong className="text-[#1b1c20] font-medium">
-                {props.period}
-              </strong>
-            </p>
+            {p.showPeriod && (
+              <p className="mt-3 text-[12px] tracking-widest text-[#7a7263] uppercase">
+                {p.periodLabel} /{" "}
+                <strong className="text-[#1b1c20] font-medium">
+                  {p.period}
+                </strong>
+              </p>
+            )}
           </div>
 
           {/* Footer Area */}
-          <div className="w-full flex justify-between items-end mt-auto pt-8">
-            <div className="flex flex-col text-[10px] text-[#938e82] tracking-[0.2em] uppercase gap-1">
-              <span>NO. {props.serial}</span>
-              <span>DT. {props.date}</span>
+          <div className="w-full flex justify-between items-end mt-auto pt-4 border-t border-[#e6e1d2]/70">
+            <div className="w-[320px]">
+              <MetadataFooter
+                idLabel={p.idLabel}
+                serial={p.serial}
+                dateLabel={p.dateLabel}
+                date={p.date}
+                qrDataUrl={p.qrDataUrl}
+                showQrCode={p.showQrCode}
+                align="between"
+              />
             </div>
 
-            <div className="flex gap-12">
+            <div className="flex gap-10">
               <SignatureBlock
                 align="center"
-                signature={props.sigImg}
-                name={props.ceoName}
-                role={props.ceoRole}
+                signature={p.sig1Img}
+                name={p.sig1Name}
+                role={p.sig1Role}
+                org={p.sig1Org}
               />
               <SignatureBlock
                 align="center"
-                signature={props.sigImgRight}
-                name={props.hrName}
-                role={props.hrRole}
+                signature={p.sig2Img}
+                name={p.sig2Name}
+                role={p.sig2Role}
+                org={p.sig2Org}
               />
             </div>
           </div>
@@ -430,90 +731,108 @@ export const MinimalistTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 );
 MinimalistTemplate.displayName = "MinimalistTemplate";
 
-/* ─── 4. Corporate Template ──────────────────────────── */
+/* ────────────────────────────────────────────────────────────────
+   4. Corporate Template
+   ──────────────────────────────────────────────────────────────── */
 export const CorporateTemplate = forwardRef<HTMLDivElement, TemplateProps>(
-  (props, ref) => {
+  (rawProps, ref) => {
+    const p = normalizeProps(rawProps);
     return (
       <div
         ref={ref}
         className="relative w-full max-w-[1100px] aspect-[1.414/1] shadow-2xl overflow-hidden bg-white"
       >
-        <div className="absolute inset-0 border-[24px] border-[#1f2536] pointer-events-none" />
-        <div className="absolute inset-[32px] border-[2px] border-[#b8862e] pointer-events-none" />
+        <div className="absolute inset-0 border-[20px] border-[#1f2536] pointer-events-none" />
+        <div className="absolute inset-[26px] border-[2px] border-[#b8862e] pointer-events-none" />
 
-        {props.showWatermark && (
+        {p.showWatermark && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1]">
             <img
               src={snrWatermark.src}
               alt="watermark"
-              className="w-[50%] max-w-[400px] object-contain opacity-[0.06]"
+              className="w-[48%] max-w-[380px] object-contain opacity-[0.05]"
             />
           </div>
         )}
 
-        <div className="relative z-10 h-full flex flex-col px-20 py-16 text-[#1f2536]">
-          <div className="flex justify-between items-start w-full border-b-2 border-[#1f2536] pb-6">
+        <div className="relative z-10 h-full flex flex-col items-center justify-between px-16 py-10 text-[#1f2536]">
+          {/* Header */}
+          <div className="flex flex-col items-center">
             <img
-              src={props.logo}
+              src={p.logo}
               alt="Company logo"
-              className="object-contain h-[70px] w-auto"
+              className="object-contain max-h-[46px] w-auto"
             />
-            <div className="text-right">
-              <h1 className="text-[32px] font-bold tracking-widest uppercase text-[#1f2536]">
-                {props.title}
-              </h1>
-              <p className="text-[12px] font-bold tracking-[0.2em] uppercase text-[#b8862e] mt-2">
-                Official Document
+            <div className="mt-2 w-16 h-[2px] bg-[#b8862e]" />
+            <h1
+              style={{ fontFamily: "var(--font-cormorant)" }}
+              className="mt-2 text-[38px] font-bold tracking-wider uppercase text-center text-[#1f2536]"
+            >
+              {p.title}
+            </h1>
+            {p.subtitle && (
+              <div className="mt-1">
+                <SubtitleBadge subtitle={p.subtitle} variant="gold" />
+              </div>
+            )}
+          </div>
+
+          {/* Recipient */}
+          <div className="my-auto flex flex-col items-center w-full">
+            {p.presentationLine && (
+              <p className="text-[13px] uppercase tracking-[0.2em] text-[#6b6657] font-semibold">
+                {p.presentationLine}
               </p>
+            )}
+            <RecipientName
+              name={p.name}
+              font={p.nameFont}
+              textColor="text-[#1f2536]"
+              lineColor="bg-[#b8862e]"
+            />
+
+            <div className="mt-4 max-w-[700px] text-center text-[13.5px] text-[#1f2536]/85 leading-relaxed">
+              {renderFormattedBody(p.body)}
             </div>
+
+            {p.showPeriod && (
+              <p className="mt-3 text-[13px] tracking-wide text-[#6b6657]">
+                {p.periodLabel}:{" "}
+                <strong className="text-[#1f2536] font-semibold">
+                  {p.period}
+                </strong>
+              </p>
+            )}
           </div>
 
-          <div className="flex-1 flex flex-col justify-center">
-            <p className="text-[16px] font-semibold tracking-widest uppercase text-[#1f2536]/70 mb-4">
-              This certifies that
-            </p>
-            <RecipientName name={props.name} align="left" width={800} />
-
-            <p className="mt-8 max-w-[800px] text-[16px] leading-[1.8] whitespace-pre-wrap font-medium text-[#1f2536]/80">
-              {props.body.split("SNR Edatas").map((part, index, array) => (
-                <span key={index}>
-                  {part}
-                  {index < array.length - 1 && (
-                    <strong className="font-bold text-[#1f2536]">
-                      SNR Edatas
-                    </strong>
-                  )}
-                </span>
-              ))}
-            </p>
-            <p className="mt-6 text-[15px] font-semibold tracking-wide">
-              Internship Period:{" "}
-              <span className="text-[#b8862e]">{props.period}</span>
-            </p>
-          </div>
-
-          <div className="w-full flex justify-between items-end mt-8">
-            <div className="flex gap-16">
+          {/* Signatures + Footer */}
+          <div className="w-full mt-auto">
+            <div className="grid grid-cols-2 gap-8 items-end">
               <SignatureBlock
                 align="left"
-                signature={props.sigImg}
-                name={props.ceoName}
-                role={props.ceoRole}
+                signature={p.sig1Img}
+                name={p.sig1Name}
+                role={p.sig1Role}
+                org={p.sig1Org}
               />
               <SignatureBlock
-                align="left"
-                signature={props.sigImgRight}
-                name={props.hrName}
-                role={props.hrRole}
+                align="right"
+                signature={p.sig2Img}
+                name={p.sig2Name}
+                role={p.sig2Role}
+                org={p.sig2Org}
               />
             </div>
-            <div className="flex flex-col items-end gap-1 text-[12px] font-bold tracking-widest uppercase bg-[#1f2536] text-white p-4">
-              <span>
-                NO. <span className="text-[#b8862e]">{props.serial}</span>
-              </span>
-              <span>
-                DT. <span className="text-[#b8862e]">{props.date}</span>
-              </span>
+
+            <div className="mt-3.5 pt-2 border-t border-[#1f2536]/15">
+              <MetadataFooter
+                idLabel={p.idLabel}
+                serial={p.serial}
+                dateLabel={p.dateLabel}
+                date={p.date}
+                qrDataUrl={p.qrDataUrl}
+                showQrCode={p.showQrCode}
+              />
             </div>
           </div>
         </div>
@@ -523,83 +842,102 @@ export const CorporateTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 );
 CorporateTemplate.displayName = "CorporateTemplate";
 
-/* ─── 5. Elegant Template ──────────────────────────── */
+/* ────────────────────────────────────────────────────────────────
+   5. Elegant Template
+   ──────────────────────────────────────────────────────────────── */
 export const ElegantTemplate = forwardRef<HTMLDivElement, TemplateProps>(
-  (props, ref) => {
+  (rawProps, ref) => {
+    const p = normalizeProps(rawProps);
     return (
       <div
         ref={ref}
         className="relative w-full max-w-[1100px] aspect-[1.414/1] shadow-2xl overflow-hidden bg-[#fffdfa]"
       >
-        <div className="absolute inset-[24px] border border-[#b8862e]/40 pointer-events-none rounded-2xl" />
-        <div className="absolute inset-[32px] border border-[#b8862e]/20 pointer-events-none rounded-xl" />
+        <div className="absolute inset-[20px] border border-[#b8862e]/40 pointer-events-none rounded-2xl" />
+        <div className="absolute inset-[26px] border border-[#b8862e]/20 pointer-events-none rounded-xl" />
 
-        {props.showWatermark && (
+        {p.showWatermark && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1]">
             <img
               src={snrWatermark.src}
               alt="watermark"
-              className="w-[45%] max-w-[380px] object-contain opacity-[0.05]"
+              className="w-[45%] max-w-[360px] object-contain opacity-[0.05]"
             />
           </div>
         )}
 
-        <div className="relative z-10 h-full flex flex-col items-center justify-between px-20 py-16 text-[#33302a]">
-          <img
-            src={props.logo}
-            alt="Company logo"
-            className="object-contain h-[65px] w-auto"
-          />
-
-          <div className="flex-1 flex flex-col items-center justify-center w-full">
+        <div className="relative z-10 h-full flex flex-col items-center justify-between px-16 py-9 text-[#33302a]">
+          <div className="flex flex-col items-center">
+            <img
+              src={p.logo}
+              alt="Company logo"
+              className="object-contain max-h-[46px] w-auto"
+            />
             <h1
-              style={{ fontFamily: "var(--font-great-vibes)" }}
-              className="text-[72px] leading-none text-[#b8862e] mb-10"
+              style={{ fontFamily: "var(--font-cormorant)" }}
+              className="mt-2 text-[38px] font-bold text-[#b8862e] uppercase tracking-wider text-center"
             >
-              {props.title}
+              {p.title}
             </h1>
-            <p className="text-[14px] uppercase tracking-[0.4em] text-[#33302a]/60 mb-6 font-medium">
-              Presented To
-            </p>
-
-            <RecipientName name={props.name} align="center" width={700} />
-
-            <p className="mt-8 max-w-[700px] text-center text-[15px] leading-[2.2] whitespace-pre-wrap italic text-[#33302a]/80">
-              {props.body.split("SNR Edatas").map((part, index, array) => (
-                <span key={index}>
-                  {part}
-                  {index < array.length - 1 && (
-                    <strong className="font-semibold not-italic text-[#33302a]">
-                      SNR Edatas
-                    </strong>
-                  )}
-                </span>
-              ))}
-            </p>
-
-            <p className="mt-8 text-[14px] tracking-[0.1em] uppercase text-[#33302a]/60">
-              Period of Internship:{" "}
-              <strong className="text-[#33302a]">{props.period}</strong>
-            </p>
+            {p.subtitle && (
+              <div className="mt-1">
+                <SubtitleBadge subtitle={p.subtitle} variant="gold" />
+              </div>
+            )}
           </div>
 
-          <div className="w-full grid grid-cols-3 items-end mt-8">
-            <div className="flex flex-col text-[10px] text-[#33302a]/50 tracking-[0.2em] uppercase gap-1">
-              <span>Certificate No: {props.serial}</span>
-              <span>Issued Date: {props.date}</span>
+          <div className="my-auto flex flex-col items-center w-full">
+            {p.presentationLine && (
+              <p className="text-[13px] uppercase tracking-[0.3em] text-[#33302a]/60 font-semibold mb-1">
+                {p.presentationLine}
+              </p>
+            )}
+            <RecipientName
+              name={p.name}
+              font={p.nameFont}
+              lineColor="bg-[#b8862e]"
+            />
+
+            <div className="mt-4 max-w-[700px] text-center text-[13.5px] italic text-[#33302a]/85 leading-relaxed">
+              {renderFormattedBody(
+                p.body,
+                "font-semibold not-italic text-[#33302a]",
+              )}
             </div>
-            <div className="col-span-2 flex justify-end gap-16">
+
+            {p.showPeriod && (
+              <p className="mt-3 text-[12.5px] tracking-[0.1em] uppercase text-[#33302a]/70">
+                {p.periodLabel}:{" "}
+                <strong className="text-[#33302a]">{p.period}</strong>
+              </p>
+            )}
+          </div>
+
+          <div className="w-full flex justify-between items-end mt-auto pt-3 border-t border-[#b8862e]/20">
+            <div className="w-[340px]">
+              <MetadataFooter
+                idLabel={p.idLabel}
+                serial={p.serial}
+                dateLabel={p.dateLabel}
+                date={p.date}
+                qrDataUrl={p.qrDataUrl}
+                showQrCode={p.showQrCode}
+              />
+            </div>
+            <div className="flex gap-12">
               <SignatureBlock
                 align="center"
-                signature={props.sigImg}
-                name={props.ceoName}
-                role={props.ceoRole}
+                signature={p.sig1Img}
+                name={p.sig1Name}
+                role={p.sig1Role}
+                org={p.sig1Org}
               />
               <SignatureBlock
                 align="center"
-                signature={props.sigImgRight}
-                name={props.hrName}
-                role={props.hrRole}
+                signature={p.sig2Img}
+                name={p.sig2Name}
+                role={p.sig2Role}
+                org={p.sig2Org}
               />
             </div>
           </div>
@@ -610,91 +948,106 @@ export const ElegantTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 );
 ElegantTemplate.displayName = "ElegantTemplate";
 
-/* ─── 6. Geometric Template ──────────────────────────── */
+/* ────────────────────────────────────────────────────────────────
+   6. Geometric Template
+   ──────────────────────────────────────────────────────────────── */
 export const GeometricTemplate = forwardRef<HTMLDivElement, TemplateProps>(
-  (props, ref) => {
+  (rawProps, ref) => {
+    const p = normalizeProps(rawProps);
     return (
       <div
         ref={ref}
         className="relative w-full max-w-[1100px] aspect-[1.414/1] shadow-2xl overflow-hidden bg-white"
       >
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-[#b8862e]/10 to-transparent pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-[#1f2536]/5 to-transparent pointer-events-none" />
-        <div className="absolute top-[20px] left-[20px] bottom-[20px] w-[8px] bg-[#1f2536]" />
-        <div className="absolute top-[20px] left-[32px] bottom-[20px] w-[2px] bg-[#b8862e]" />
+        <div className="absolute top-0 right-0 w-[340px] h-[340px] bg-gradient-to-bl from-[#b8862e]/10 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-[#1f2536]/5 to-transparent pointer-events-none" />
+        <div className="absolute top-[18px] left-[18px] bottom-[18px] w-[6px] bg-[#1f2536]" />
+        <div className="absolute top-[18px] left-[28px] bottom-[18px] w-[2px] bg-[#b8862e]" />
 
-        {props.showWatermark && (
+        {p.showWatermark && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1]">
             <img
               src={snrWatermark.src}
               alt="watermark"
-              className="w-[40%] max-w-[320px] object-contain opacity-[0.03] grayscale"
+              className="w-[42%] max-w-[340px] object-contain opacity-[0.03] grayscale"
             />
           </div>
         )}
 
-        <div className="relative z-10 h-full flex flex-col pl-[100px] pr-20 py-16 text-[#1f2536]">
-          <div className="flex justify-between items-end w-full border-b border-[#e6e1d2] pb-6">
-            <h1 className="text-[40px] font-bold tracking-tight uppercase text-[#1f2536]">
-              {props.title}
-            </h1>
+        <div className="relative z-10 h-full flex flex-col pl-[80px] pr-16 py-9 text-[#1f2536] justify-between">
+          <div className="flex justify-between items-end w-full border-b border-[#e6e1d2] pb-3.5">
+            <div>
+              <h1 className="text-[34px] font-bold tracking-tight uppercase text-[#1f2536]">
+                {p.title}
+              </h1>
+              {p.subtitle && (
+                <div className="mt-1">
+                  <SubtitleBadge subtitle={p.subtitle} variant="gold" />
+                </div>
+              )}
+            </div>
             <img
-              src={props.logo}
+              src={p.logo}
               alt="Company logo"
-              className="object-contain h-[55px] w-auto"
+              className="object-contain max-h-[44px] w-auto"
             />
           </div>
 
-          <div className="flex-1 flex flex-col justify-center">
-            <p className="text-[13px] font-semibold tracking-[0.2em] uppercase text-[#b8862e] mb-4">
-              Awarded To
-            </p>
-            <RecipientName name={props.name} align="left" width={750} />
-
-            <div className="mt-8 relative">
-              <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#1f2536]/20" />
-              <p className="pl-6 max-w-[750px] text-[15px] leading-[1.8] whitespace-pre-wrap text-[#1f2536]/80">
-                {props.body.split("SNR Edatas").map((part, index, array) => (
-                  <span key={index}>
-                    {part}
-                    {index < array.length - 1 && (
-                      <strong className="font-bold text-[#1f2536]">
-                        SNR Edatas
-                      </strong>
-                    )}
-                  </span>
-                ))}
+          <div className="my-auto flex flex-col justify-center">
+            {p.presentationLine && (
+              <p className="text-[12.5px] font-semibold tracking-[0.2em] uppercase text-[#b8862e] mb-1">
+                {p.presentationLine}
               </p>
+            )}
+            <RecipientName
+              name={p.name}
+              align="left"
+              width={750}
+              font={p.nameFont}
+            />
+
+            <div className="mt-3.5 relative">
+              <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#1f2536]/25" />
+              <div className="pl-4 max-w-[750px] text-[13.5px] text-[#1f2536]/85 leading-relaxed">
+                {renderFormattedBody(p.body)}
+              </div>
             </div>
 
-            <p className="mt-6 text-[14px] font-medium tracking-wide">
-              Internship Period:{" "}
-              <span className="font-bold">{props.period}</span>
-            </p>
+            {p.showPeriod && (
+              <p className="mt-3 text-[13px] font-medium tracking-wide">
+                {p.periodLabel}:{" "}
+                <span className="font-bold text-[#b8862e]">{p.period}</span>
+              </p>
+            )}
           </div>
 
-          <div className="w-full flex justify-between items-end mt-8">
-            <div className="flex gap-16">
+          <div className="w-full flex justify-between items-end mt-auto border-t border-[#e6e1d2] pt-3.5">
+            <div className="flex gap-14">
               <SignatureBlock
                 align="left"
-                signature={props.sigImg}
-                name={props.ceoName}
-                role={props.ceoRole}
+                signature={p.sig1Img}
+                name={p.sig1Name}
+                role={p.sig1Role}
+                org={p.sig1Org}
               />
               <SignatureBlock
                 align="left"
-                signature={props.sigImgRight}
-                name={props.hrName}
-                role={props.hrRole}
+                signature={p.sig2Img}
+                name={p.sig2Name}
+                role={p.sig2Role}
+                org={p.sig2Org}
               />
             </div>
-            <div className="flex gap-8 text-[11px] font-bold tracking-widest uppercase text-[#1f2536]/50">
-              <span>
-                NO. <span className="text-[#1f2536]">{props.serial}</span>
-              </span>
-              <span>
-                DATE <span className="text-[#1f2536]">{props.date}</span>
-              </span>
+            <div className="w-[340px]">
+              <MetadataFooter
+                idLabel={p.idLabel}
+                serial={p.serial}
+                dateLabel={p.dateLabel}
+                date={p.date}
+                qrDataUrl={p.qrDataUrl}
+                showQrCode={p.showQrCode}
+                align="right"
+              />
             </div>
           </div>
         </div>
@@ -704,132 +1057,110 @@ export const GeometricTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 );
 GeometricTemplate.displayName = "GeometricTemplate";
 
-/* ─── 7. Premium Dark Template ──────────────────────────── */
+/* ────────────────────────────────────────────────────────────────
+   7. Premium Dark Template
+   ──────────────────────────────────────────────────────────────── */
 export const PremiumDarkTemplate = forwardRef<HTMLDivElement, TemplateProps>(
-  (props, ref) => {
+  (rawProps, ref) => {
+    const p = normalizeProps(rawProps);
     return (
       <div
         ref={ref}
         className="relative w-full max-w-[1100px] aspect-[1.414/1] shadow-2xl overflow-hidden bg-[#1a1f2e]"
       >
-        <div className="absolute inset-[20px] border-[2px] border-[#b8862e]/40 pointer-events-none" />
-        <div className="absolute inset-[26px] border border-[#b8862e]/20 pointer-events-none" />
+        <div className="absolute inset-[18px] border-[2px] border-[#b8862e]/40 pointer-events-none" />
+        <div className="absolute inset-[24px] border border-[#b8862e]/20 pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#b8862e]/5 rounded-full blur-[90px] pointer-events-none" />
 
-        {/* Glow effect */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#b8862e]/5 rounded-full blur-[100px] pointer-events-none" />
-
-        {props.showWatermark && (
+        {p.showWatermark && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1]">
             <img
               src={snrWatermark.src}
               alt="watermark"
-              className="w-[50%] max-w-[400px] object-contain opacity-[0.08]"
+              className="w-[48%] max-w-[380px] object-contain opacity-[0.07]"
               style={{ filter: "brightness(0) invert(1)" }}
             />
           </div>
         )}
 
-        <div className="relative z-10 h-full flex flex-col items-center px-20 pt-14 pb-10 text-[#f8f9fa]">
-          <img
-            src={props.logo}
-            alt="Company logo"
-            className="object-contain h-[70px] w-auto"
-            style={{ filter: "brightness(0) invert(1)" }}
-          />
-
-          <div className="mt-5 w-16 h-px bg-[#b8862e]" />
-
-          <h1
-            style={{ fontFamily: "var(--font-cormorant)" }}
-            className="mt-6 text-[48px] font-semibold text-center tracking-[0.15em] text-[#b8862e] uppercase"
-          >
-            {props.title}
-          </h1>
-
-          <div className="flex-1 flex flex-col justify-center items-center w-full mt-4">
-            <p className="text-[14px] uppercase tracking-[0.3em] text-[#f8f9fa]/50 mb-4">
-              Proudly Presented To
-            </p>
-
-            <h2
-              style={{ fontFamily: "var(--font-great-vibes)" }}
-              className="text-[72px] leading-none text-white whitespace-nowrap"
+        <div className="relative z-10 h-full flex flex-col items-center justify-between px-16 py-9 text-[#f8f9fa]">
+          <div className="flex flex-col items-center">
+            <img
+              src={p.logo}
+              alt="Company logo"
+              className="object-contain max-h-[46px] w-auto"
+              style={{ filter: "brightness(0) invert(1)" }}
+            />
+            <div className="mt-2 w-16 h-px bg-[#b8862e]" />
+            <h1
+              style={{ fontFamily: "var(--font-cormorant)" }}
+              className="mt-2 text-[38px] font-semibold text-center tracking-[0.15em] text-[#b8862e] uppercase"
             >
-              {props.name}
-            </h2>
-            <div className="w-[400px] h-px bg-gradient-to-r from-transparent via-[#b8862e] to-transparent mt-4" />
-
-            <p className="mt-8 max-w-[700px] text-center text-[15px] leading-[2] whitespace-pre-wrap text-[#f8f9fa]/70">
-              {props.body.split("SNR Edatas").map((part, index, array) => (
-                <span key={index}>
-                  {part}
-                  {index < array.length - 1 && (
-                    <strong className="font-semibold text-white">
-                      SNR Edatas
-                    </strong>
-                  )}
-                </span>
-              ))}
-            </p>
-
-            <p className="mt-6 text-[14px] tracking-wide text-[#f8f9fa]/50">
-              Internship Period{" "}
-              <span className="text-[#b8862e] ml-2 font-medium">
-                {props.period}
-              </span>
-            </p>
+              {p.title}
+            </h1>
+            {p.subtitle && (
+              <div className="mt-1">
+                <SubtitleBadge subtitle={p.subtitle} variant="dark" />
+              </div>
+            )}
           </div>
 
-          <div className="w-full grid grid-cols-3 items-end mt-8 border-t border-[#f8f9fa]/10 pt-6">
-            <div className="flex flex-col text-[11px] text-[#f8f9fa]/40 tracking-widest uppercase gap-1">
-              <span>
-                NO.{" "}
-                <strong className="text-[#f8f9fa]/80">{props.serial}</strong>
-              </span>
-              <span>
-                DT. <strong className="text-[#f8f9fa]/80">{props.date}</strong>
-              </span>
+          <div className="my-auto flex flex-col items-center w-full">
+            {p.presentationLine && (
+              <p className="text-[13px] uppercase tracking-[0.3em] text-[#f8f9fa]/50 mb-1">
+                {p.presentationLine}
+              </p>
+            )}
+            <RecipientName
+              name={p.name}
+              font={p.nameFont}
+              textColor="text-white"
+              lineColor="bg-[#b8862e]"
+            />
+
+            <div className="mt-4 max-w-[700px] text-center text-[13.5px] text-[#f8f9fa]/75 leading-relaxed">
+              {renderFormattedBody(p.body, "font-semibold text-white")}
             </div>
 
-            <div className="col-span-2 flex justify-end gap-16">
-              <div className="flex flex-col items-center">
-                {props.sigImg ? (
-                  <img
-                    src={props.sigImg}
-                    alt="sig"
-                    className="h-32 object-contain -mb-10 max-w-[350px] scale-[1.15]"
-                    style={{ filter: "brightness(0) invert(1)" }}
-                  />
-                ) : (
-                  <div className="h-32" />
-                )}
-                <div className="w-[200px] h-px bg-[#f8f9fa]/30 mt-1" />
-                <p className="mt-2 text-[12px] font-semibold tracking-wide text-white">
-                  {props.ceoName}
-                </p>
-                <p className="text-[11px] text-[#f8f9fa]/50 mt-0.5">
-                  {props.ceoRole}
-                </p>
+            {p.showPeriod && (
+              <p className="mt-3 text-[13px] tracking-wide text-[#f8f9fa]/60">
+                {p.periodLabel}:{" "}
+                <span className="text-[#b8862e] font-medium">{p.period}</span>
+              </p>
+            )}
+          </div>
+
+          <div className="w-full mt-auto">
+            <div className="flex justify-between items-end border-t border-[#f8f9fa]/10 pt-3">
+              <div className="w-[340px]">
+                <MetadataFooter
+                  idLabel={p.idLabel}
+                  serial={p.serial}
+                  dateLabel={p.dateLabel}
+                  date={p.date}
+                  qrDataUrl={p.qrDataUrl}
+                  showQrCode={p.showQrCode}
+                  dark
+                />
               </div>
 
-              <div className="flex flex-col items-center">
-                {props.sigImgRight ? (
-                  <img
-                    src={props.sigImgRight}
-                    alt="sig"
-                    className="h-32 object-contain -mb-10 max-w-[350px] scale-[1.15]"
-                    style={{ filter: "brightness(0) invert(1)" }}
-                  />
-                ) : (
-                  <div className="h-32" />
-                )}
-                <div className="w-[200px] h-px bg-[#f8f9fa]/30 mt-1" />
-                <p className="mt-2 text-[12px] font-semibold tracking-wide text-white">
-                  {props.hrName}
-                </p>
-                <p className="text-[11px] text-[#f8f9fa]/50 mt-0.5">
-                  {props.hrRole}
-                </p>
+              <div className="flex gap-14">
+                <SignatureBlock
+                  align="center"
+                  signature={p.sig1Img}
+                  name={p.sig1Name}
+                  role={p.sig1Role}
+                  org={p.sig1Org}
+                  dark
+                />
+                <SignatureBlock
+                  align="center"
+                  signature={p.sig2Img}
+                  name={p.sig2Name}
+                  role={p.sig2Role}
+                  org={p.sig2Org}
+                  dark
+                />
               </div>
             </div>
           </div>
@@ -840,102 +1171,109 @@ export const PremiumDarkTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 );
 PremiumDarkTemplate.displayName = "PremiumDarkTemplate";
 
-/* ─── 8. Academic Template ──────────────────────────── */
+/* ────────────────────────────────────────────────────────────────
+   8. Academic Template
+   ──────────────────────────────────────────────────────────────── */
 export const AcademicTemplate = forwardRef<HTMLDivElement, TemplateProps>(
-  (props, ref) => {
+  (rawProps, ref) => {
+    const p = normalizeProps(rawProps);
     return (
       <div
         ref={ref}
         className="relative w-full max-w-[1100px] aspect-[1.414/1] shadow-2xl overflow-hidden bg-[#faf8f5]"
       >
-        <div className="absolute inset-[18px] border-[6px] border-double border-[#1f2536] pointer-events-none" />
-        <div className="absolute inset-[28px] border border-[#1f2536]/30 pointer-events-none" />
+        <div className="absolute inset-[16px] border-[5px] border-double border-[#1f2536] pointer-events-none" />
+        <div className="absolute inset-[24px] border border-[#1f2536]/30 pointer-events-none" />
 
-        {/* Corner accents */}
-        <div className="absolute top-[18px] left-[18px] w-8 h-8 border-r-[3px] border-b-[3px] border-[#b8862e] pointer-events-none" />
-        <div className="absolute top-[18px] right-[18px] w-8 h-8 border-l-[3px] border-b-[3px] border-[#b8862e] pointer-events-none" />
-        <div className="absolute bottom-[18px] left-[18px] w-8 h-8 border-r-[3px] border-t-[3px] border-[#b8862e] pointer-events-none" />
-        <div className="absolute bottom-[18px] right-[18px] w-8 h-8 border-l-[3px] border-t-[3px] border-[#b8862e] pointer-events-none" />
+        {/* Corner Accents */}
+        <div className="absolute top-[16px] left-[16px] w-7 h-7 border-r-[2.5px] border-b-[2.5px] border-[#b8862e] pointer-events-none" />
+        <div className="absolute top-[16px] right-[16px] w-7 h-7 border-l-[2.5px] border-b-[2.5px] border-[#b8862e] pointer-events-none" />
+        <div className="absolute bottom-[16px] left-[16px] w-7 h-7 border-r-[2.5px] border-t-[2.5px] border-[#b8862e] pointer-events-none" />
+        <div className="absolute bottom-[16px] right-[16px] w-7 h-7 border-l-[2.5px] border-t-[2.5px] border-[#b8862e] pointer-events-none" />
 
-        {props.showWatermark && (
+        {p.showWatermark && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1]">
             <img
               src={snrWatermark.src}
               alt="watermark"
-              className="w-[45%] max-w-[380px] object-contain opacity-[0.06] sepia-[0.3]"
+              className="w-[45%] max-w-[360px] object-contain opacity-[0.06] sepia-[0.3]"
             />
           </div>
         )}
 
-        <div className="relative z-10 h-full flex flex-col items-center px-24 py-16 text-[#1f2536]">
-          <img
-            src={props.logo}
-            alt="Company logo"
-            className="object-contain h-[80px] w-auto"
-          />
+        <div className="relative z-10 h-full flex flex-col items-center justify-between px-16 py-9 text-[#1f2536]">
+          <div className="flex flex-col items-center">
+            <img
+              src={p.logo}
+              alt="Company logo"
+              className="object-contain max-h-[46px] w-auto"
+            />
+            <h1
+              style={{ fontFamily: "var(--font-cormorant)" }}
+              className="mt-2 text-[40px] font-bold text-center tracking-wide text-[#1f2536] uppercase"
+            >
+              {p.title}
+            </h1>
+            {p.subtitle && (
+              <div className="mt-1">
+                <SubtitleBadge subtitle={p.subtitle} variant="gold" />
+              </div>
+            )}
+          </div>
 
-          <h1
-            style={{ fontFamily: "var(--font-cormorant)" }}
-            className="mt-6 text-[54px] font-bold text-center tracking-wide text-[#1f2536]"
-          >
-            {props.title}
-          </h1>
+          <div className="my-auto flex flex-col items-center w-full">
+            {p.presentationLine && (
+              <p
+                className="text-[14.5px] font-medium italic text-[#1f2536]/70"
+                style={{ fontFamily: "var(--font-cormorant)" }}
+              >
+                {p.presentationLine}
+              </p>
+            )}
+            <RecipientName
+              name={p.name}
+              font={p.nameFont}
+              lineColor="bg-[#b8862e]"
+            />
 
-          <p
-            className="mt-4 text-[16px] font-medium italic text-[#1f2536]/70"
-            style={{ fontFamily: "var(--font-cormorant)" }}
-          >
-            has conferred upon
-          </p>
-
-          <RecipientName name={props.name} align="center" width={800} />
-
-          <p
-            className="mt-6 text-[15px] italic text-[#1f2536]/70"
-            style={{ fontFamily: "var(--font-cormorant)" }}
-          >
-            for the successful completion of the internship requirements
-          </p>
-
-          <p className="mt-6 max-w-[750px] text-center text-[15px] leading-[1.8] whitespace-pre-wrap text-[#1f2536]/90 font-medium">
-            {props.body.split("SNR Edatas").map((part, index, array) => (
-              <span key={index}>
-                {part}
-                {index < array.length - 1 && (
-                  <strong className="font-bold text-[#1f2536]">
-                    SNR Edatas
-                  </strong>
-                )}
-              </span>
-            ))}
-          </p>
-
-          <p className="mt-6 text-[15px] font-semibold text-[#1f2536]">
-            Given this <span className="text-[#b8862e]">{props.period}</span>
-          </p>
-
-          <div className="w-full flex justify-between items-end mt-auto pt-4">
-            <div className="flex flex-col text-[11px] font-bold text-[#1f2536]/60 tracking-widest uppercase gap-1">
-              <span>
-                REG NO. <span className="text-[#1f2536]">{props.serial}</span>
-              </span>
-              <span>
-                ISSUED <span className="text-[#1f2536]">{props.date}</span>
-              </span>
+            <div className="mt-4 max-w-[720px] text-center text-[13.5px] text-[#1f2536]/90 font-medium leading-relaxed">
+              {renderFormattedBody(p.body)}
             </div>
 
-            <div className="flex gap-16">
+            {p.showPeriod && (
+              <p className="mt-3 text-[13.5px] font-semibold text-[#1f2536]">
+                {p.periodLabel}:{" "}
+                <span className="text-[#b8862e]">{p.period}</span>
+              </p>
+            )}
+          </div>
+
+          <div className="w-full flex justify-between items-end mt-auto pt-3 border-t border-[#1f2536]/15">
+            <div className="w-[340px]">
+              <MetadataFooter
+                idLabel={p.idLabel}
+                serial={p.serial}
+                dateLabel={p.dateLabel}
+                date={p.date}
+                qrDataUrl={p.qrDataUrl}
+                showQrCode={p.showQrCode}
+              />
+            </div>
+
+            <div className="flex gap-14">
               <SignatureBlock
                 align="center"
-                signature={props.sigImg}
-                name={props.ceoName}
-                role={props.ceoRole}
+                signature={p.sig1Img}
+                name={p.sig1Name}
+                role={p.sig1Role}
+                org={p.sig1Org}
               />
               <SignatureBlock
                 align="center"
-                signature={props.sigImgRight}
-                name={props.hrName}
-                role={props.hrRole}
+                signature={p.sig2Img}
+                name={p.sig2Name}
+                role={p.sig2Role}
+                org={p.sig2Org}
               />
             </div>
           </div>
@@ -946,85 +1284,98 @@ export const AcademicTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 );
 AcademicTemplate.displayName = "AcademicTemplate";
 
-/* ─── 9. Creative Template ──────────────────────────── */
+/* ────────────────────────────────────────────────────────────────
+   9. Creative Template
+   ──────────────────────────────────────────────────────────────── */
 export const CreativeTemplate = forwardRef<HTMLDivElement, TemplateProps>(
-  (props, ref) => {
+  (rawProps, ref) => {
+    const p = normalizeProps(rawProps);
     return (
       <div
         ref={ref}
         className="relative w-full max-w-[1100px] aspect-[1.414/1] shadow-2xl overflow-hidden bg-white"
       >
         <div className="absolute top-0 right-0 w-1/3 h-full bg-[#f6f2e7] pointer-events-none" />
-        <div className="absolute top-[40px] right-[40px] bottom-[40px] left-[40px] border-2 border-[#1f2536] pointer-events-none z-[2]" />
-        <div className="absolute top-[32px] right-[48px] bottom-[48px] left-[32px] border-2 border-[#b8862e] pointer-events-none z-[2]" />
+        <div className="absolute top-[30px] right-[30px] bottom-[30px] left-[30px] border-2 border-[#1f2536] pointer-events-none z-[2]" />
+        <div className="absolute top-[24px] right-[38px] bottom-[38px] left-[24px] border-2 border-[#b8862e] pointer-events-none z-[2]" />
 
-        {props.showWatermark && (
+        {p.showWatermark && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1] pr-[33%]">
             <img
               src={snrWatermark.src}
               alt="watermark"
-              className="w-[60%] max-w-[400px] object-contain opacity-[0.05]"
+              className="w-[50%] max-w-[360px] object-contain opacity-[0.05]"
             />
           </div>
         )}
 
-        <div className="relative z-10 h-full flex flex-col justify-center px-[80px] py-[60px] text-[#1f2536]">
-          <div className="w-[60%] pr-8">
+        <div className="relative z-10 h-full flex flex-col justify-between px-16 py-10 text-[#1f2536]">
+          <div className="w-[62%] pr-6">
             <img
-              src={props.logo}
+              src={p.logo}
               alt="Company logo"
-              className="object-contain h-[60px] w-auto mb-8"
+              className="object-contain max-h-[46px] w-auto mb-4"
+            />
+            <h1 className="text-[38px] font-black tracking-tight leading-none text-[#1f2536] uppercase">
+              {p.title}
+            </h1>
+            <div className="flex items-center gap-3 mt-2 mb-4">
+              <div className="w-12 h-1.5 bg-[#b8862e]" />
+              {p.subtitle && (
+                <SubtitleBadge subtitle={p.subtitle} variant="gold" />
+              )}
+            </div>
+
+            {p.presentationLine && (
+              <p className="text-[12.5px] font-bold tracking-[0.2em] uppercase text-[#1f2536]/50 mb-1">
+                {p.presentationLine}
+              </p>
+            )}
+            <RecipientName
+              name={p.name}
+              align="left"
+              width={560}
+              font={p.nameFont}
             />
 
-            <h1 className="text-[48px] font-black tracking-tight leading-none text-[#1f2536] uppercase mb-2">
-              {props.title}
-            </h1>
-            <div className="w-12 h-2 bg-[#b8862e] mb-8" />
+            <div className="mt-4 text-[13.5px] text-[#1f2536]/80 font-medium leading-relaxed">
+              {renderFormattedBody(p.body)}
+            </div>
 
-            <p className="text-[14px] font-bold tracking-[0.2em] uppercase text-[#1f2536]/50 mb-2">
-              Presented To
-            </p>
-            <RecipientName name={props.name} align="left" width={600} />
-
-            <p className="mt-8 text-[15px] leading-[1.8] whitespace-pre-wrap text-[#1f2536]/80 font-medium">
-              {props.body.split("SNR Edatas").map((part, index, array) => (
-                <span key={index}>
-                  {part}
-                  {index < array.length - 1 && (
-                    <strong className="font-bold text-[#b8862e]">
-                      SNR Edatas
-                    </strong>
-                  )}
-                </span>
-              ))}
-            </p>
-
-            <p className="mt-6 text-[14px] font-bold text-[#1f2536]">
-              Period: <span className="text-[#b8862e]">{props.period}</span>
-            </p>
+            {p.showPeriod && (
+              <p className="mt-3 text-[13px] font-bold text-[#1f2536]">
+                {p.periodLabel}:{" "}
+                <span className="text-[#b8862e]">{p.period}</span>
+              </p>
+            )}
           </div>
 
-          <div className="absolute right-[80px] bottom-[60px] w-[25%] flex flex-col gap-10">
+          <div className="absolute right-[56px] bottom-[48px] w-[26%] flex flex-col gap-6">
             <SignatureBlock
               align="right"
-              signature={props.sigImg}
-              name={props.ceoName}
-              role={props.ceoRole}
+              signature={p.sig1Img}
+              name={p.sig1Name}
+              role={p.sig1Role}
+              org={p.sig1Org}
             />
             <SignatureBlock
               align="right"
-              signature={props.sigImgRight}
-              name={props.hrName}
-              role={props.hrRole}
+              signature={p.sig2Img}
+              name={p.sig2Name}
+              role={p.sig2Role}
+              org={p.sig2Org}
             />
 
-            <div className="flex flex-col items-end text-[11px] font-bold tracking-widest uppercase text-[#1f2536]/50 mt-4 border-t-2 border-[#b8862e] pt-4">
-              <span>
-                NO. <span className="text-[#1f2536]">{props.serial}</span>
-              </span>
-              <span>
-                DATE <span className="text-[#1f2536]">{props.date}</span>
-              </span>
+            <div className="pt-2 border-t-2 border-[#b8862e]">
+              <MetadataFooter
+                idLabel={p.idLabel}
+                serial={p.serial}
+                dateLabel={p.dateLabel}
+                date={p.date}
+                qrDataUrl={p.qrDataUrl}
+                showQrCode={p.showQrCode}
+                align="right"
+              />
             </div>
           </div>
         </div>
@@ -1034,94 +1385,108 @@ export const CreativeTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 );
 CreativeTemplate.displayName = "CreativeTemplate";
 
-/* ─── 10. Executive Template ──────────────────────────── */
+/* ────────────────────────────────────────────────────────────────
+   10. Executive Template
+   ──────────────────────────────────────────────────────────────── */
 export const ExecutiveTemplate = forwardRef<HTMLDivElement, TemplateProps>(
-  (props, ref) => {
+  (rawProps, ref) => {
+    const p = normalizeProps(rawProps);
     return (
       <div
         ref={ref}
         className="relative w-full max-w-[1100px] aspect-[1.414/1] shadow-2xl overflow-hidden bg-white"
       >
-        <div className="absolute top-0 left-0 w-full h-[180px] bg-[#1f2536] pointer-events-none" />
-        <div className="absolute top-[176px] left-0 w-full h-[4px] bg-[#b8862e] pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-[140px] bg-[#1f2536] pointer-events-none" />
+        <div className="absolute top-[136px] left-0 w-full h-[4px] bg-[#b8862e] pointer-events-none" />
 
-        {props.showWatermark && (
-          <div className="absolute inset-0 top-[180px] flex items-center justify-center pointer-events-none z-[1]">
+        {p.showWatermark && (
+          <div className="absolute inset-0 top-[140px] flex items-center justify-center pointer-events-none z-[1]">
             <img
               src={snrWatermark.src}
               alt="watermark"
-              className="w-[45%] max-w-[380px] object-contain opacity-[0.04]"
+              className="w-[44%] max-w-[360px] object-contain opacity-[0.04]"
             />
           </div>
         )}
 
-        <div className="relative z-10 h-full flex flex-col items-center">
+        <div className="relative z-10 h-full flex flex-col items-center justify-between pb-8">
           {/* Header */}
-          <div className="w-full h-[180px] flex justify-between items-center px-24">
-            <h1
-              style={{ fontFamily: "var(--font-cormorant)" }}
-              className="text-[44px] font-semibold tracking-wider text-white uppercase"
-            >
-              {props.title}
-            </h1>
+          <div className="w-full h-[140px] flex justify-between items-center px-16">
+            <div>
+              <h1
+                style={{ fontFamily: "var(--font-cormorant)" }}
+                className="text-[38px] font-semibold tracking-wider text-white uppercase"
+              >
+                {p.title}
+              </h1>
+              {p.subtitle && (
+                <div className="mt-1">
+                  <SubtitleBadge subtitle={p.subtitle} variant="dark" />
+                </div>
+              )}
+            </div>
             <img
-              src={props.logo}
+              src={p.logo}
               alt="Company logo"
-              className="object-contain h-[70px] w-auto"
+              className="object-contain max-h-[50px] w-auto"
               style={{ filter: "brightness(0) invert(1)" }}
             />
           </div>
 
           {/* Body */}
-          <div className="flex-1 w-full px-24 py-12 flex flex-col items-center text-[#1f2536]">
-            <p className="text-[14px] font-bold tracking-[0.2em] uppercase text-[#1f2536]/60 mb-6">
-              This document is proudly presented to
-            </p>
+          <div className="flex-1 w-full px-16 pt-5 flex flex-col items-center justify-between text-[#1f2536]">
+            <div className="my-auto flex flex-col items-center w-full">
+              {p.presentationLine && (
+                <p className="text-[13px] font-bold tracking-[0.2em] uppercase text-[#1f2536]/60 mb-1">
+                  {p.presentationLine}
+                </p>
+              )}
+              <RecipientName
+                name={p.name}
+                font={p.nameFont}
+                lineColor="bg-[#b8862e]"
+              />
 
-            <RecipientName name={props.name} align="center" width={800} />
+              <div className="mt-4 max-w-[740px] text-center text-[14px] text-[#1f2536]/85 font-medium leading-relaxed">
+                {renderFormattedBody(p.body)}
+              </div>
 
-            <p className="mt-10 max-w-[800px] text-center text-[16px] leading-[2] whitespace-pre-wrap text-[#1f2536]/80 font-medium">
-              {props.body.split("SNR Edatas").map((part, index, array) => (
-                <span key={index}>
-                  {part}
-                  {index < array.length - 1 && (
-                    <strong className="font-bold text-[#b8862e]">
-                      SNR Edatas
-                    </strong>
-                  )}
-                </span>
-              ))}
-            </p>
+              {p.showPeriod && (
+                <p className="mt-3 text-[13.5px] font-bold tracking-wide">
+                  {p.periodLabel}:{" "}
+                  <span className="text-[#b8862e]">{p.period}</span>
+                </p>
+              )}
+            </div>
 
-            <p className="mt-8 text-[15px] font-bold tracking-wide">
-              Internship Period:{" "}
-              <span className="text-[#b8862e]">{props.period}</span>
-            </p>
-
-            <div className="w-full flex justify-between items-end mt-auto">
-              <div className="flex gap-16">
+            <div className="w-full flex justify-between items-end mt-auto border-t border-[#1f2536]/15 pt-3">
+              <div className="flex gap-14">
                 <SignatureBlock
                   align="left"
-                  signature={props.sigImg}
-                  name={props.ceoName}
-                  role={props.ceoRole}
+                  signature={p.sig1Img}
+                  name={p.sig1Name}
+                  role={p.sig1Role}
+                  org={p.sig1Org}
                 />
                 <SignatureBlock
                   align="left"
-                  signature={props.sigImgRight}
-                  name={props.hrName}
-                  role={props.hrRole}
+                  signature={p.sig2Img}
+                  name={p.sig2Name}
+                  role={p.sig2Role}
+                  org={p.sig2Org}
                 />
               </div>
-              <div className="flex flex-col items-end text-[11px] font-bold tracking-[0.1em] text-[#1f2536]/50 bg-[#f6f2e7] px-4 py-2 rounded-md">
-                <span className="uppercase">
-                  Certificate No.{" "}
-                  <strong className="text-[#1f2536]">{props.serial}</strong>
-                </span>
-                <span className="uppercase mt-1">
-                  Date of Issue{" "}
-                  <strong className="text-[#1f2536]">{props.date}</strong>
-                </span>
+
+              <div className="w-[360px]">
+                <MetadataFooter
+                  idLabel={p.idLabel}
+                  serial={p.serial}
+                  dateLabel={p.dateLabel}
+                  date={p.date}
+                  qrDataUrl={p.qrDataUrl}
+                  showQrCode={p.showQrCode}
+                  align="right"
+                />
               </div>
             </div>
           </div>
