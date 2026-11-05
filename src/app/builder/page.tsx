@@ -270,6 +270,7 @@ export default function BuilderPage() {
   const [nameFont, setNameFont] = useState<"script" | "serif" | "sans">(
     defaultPreset.nameFont,
   );
+  const [nameFontSize, setNameFontSize] = useState<number>(54);
   const [body, setBody] = useState(defaultPreset.body);
 
   // Period

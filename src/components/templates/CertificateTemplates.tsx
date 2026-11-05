@@ -14,6 +14,7 @@ export interface TemplateProps {
   // Recipient & Body
   name: string;
   nameFont?: "script" | "serif" | "sans";
+  nameFontSize?: number;
   body: string;
 
   // Period / Timing
@@ -64,6 +65,7 @@ function normalizeProps(props: TemplateProps) {
       props.presentationLine ?? "This certificate is proudly presented to",
     name: props.name || "Recipient Name",
     nameFont: props.nameFont ?? "script",
+    nameFontSize: props.nameFontSize,
     body: props.body || "",
     periodLabel: props.periodLabel ?? "Training Period",
     period: props.period ?? "",
@@ -131,12 +133,13 @@ function renderFormattedBody(
   );
 }
 
-/* ─── Recipient name with dynamic font style & auto-shrink ────── */
+/* ─── Recipient name with consistent font size (no erratic shrinking) ─── */
 function RecipientName({
   name,
   align = "center",
-  width = 720,
+  width = 960,
   font = "script",
+  fontSize: customFontSize,
   textColor = "text-[#1f2536]",
   lineColor = "bg-[#1f2536]/40",
   showUnderline = true,
@@ -145,16 +148,13 @@ function RecipientName({
   align?: "center" | "left" | "right";
   width?: number;
   font?: "script" | "serif" | "sans";
+  fontSize?: number;
   textColor?: string;
   lineColor?: string;
   showUnderline?: boolean;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLHeadingElement>(null);
-
-  const baseSize = font === "script" ? 64 : font === "serif" ? 44 : 38;
-  const [fontSize, setFontSize] = useState(baseSize);
-  const [underlineWidth, setUnderlineWidth] = useState(220);
+  const defaultSize = font === "script" ? 54 : font === "serif" ? 42 : 36;
+  const activeFontSize = customFontSize || defaultSize;
 
   const fontFamily =
     font === "script"
@@ -163,35 +163,9 @@ function RecipientName({
         ? "var(--font-cormorant)"
         : "var(--font-montserrat)";
 
-  useEffect(() => {
-    const container = containerRef.current;
-    const text = textRef.current;
-    if (!container || !text) return;
-
-    const fit = () => {
-      const maxWidth = container.clientWidth || width;
-      let size = baseSize;
-      text.style.fontSize = `${size}px`;
-
-      while (size > 22 && text.scrollWidth > maxWidth) {
-        size -= 1;
-        text.style.fontSize = `${size}px`;
-      }
-
-      setFontSize(size);
-      setUnderlineWidth(Math.min(text.scrollWidth + 24, maxWidth));
-    };
-
-    fit();
-    const observer = new ResizeObserver(fit);
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [name, width, baseSize, font]);
-
   return (
     <div
-      ref={containerRef}
-      className={`mt-4 w-full flex flex-col ${
+      className={`mt-3 w-full flex flex-col ${
         align === "center"
           ? "items-center"
           : align === "right"
@@ -201,20 +175,18 @@ function RecipientName({
       style={{ maxWidth: `${width}px` }}
     >
       <h2
-        ref={textRef}
         style={{
           fontFamily,
-          fontSize: `${fontSize}px`,
+          fontSize: `${activeFontSize}px`,
           fontWeight: font === "script" ? 400 : font === "serif" ? 600 : 700,
         }}
-        className={`leading-none whitespace-nowrap ${textColor} max-w-full tracking-wide`}
+        className={`leading-tight whitespace-nowrap ${textColor} max-w-full tracking-wide`}
       >
         {name || "\u00A0"}
       </h2>
       {showUnderline && (
         <div
-          className={`mt-2 h-[1.5px] ${lineColor} transition-all duration-150`}
-          style={{ width: underlineWidth }}
+          className={`mt-2 h-[1.5px] ${lineColor} w-64 max-w-[80%]`}
         />
       )}
     </div>
@@ -458,7 +430,11 @@ export const ClassicTemplate = forwardRef<HTMLDivElement, TemplateProps>(
                 {p.presentationLine}
               </p>
             )}
-            <RecipientName name={p.name} font={p.nameFont} />
+            <RecipientName
+              name={p.name}
+              font={p.nameFont}
+              fontSize={p.nameFontSize}
+            />
 
             <div className="mt-4 max-w-[700px] text-center text-[13.5px] text-[#1f2536]/90 font-normal">
               {renderFormattedBody(p.body)}
@@ -574,8 +550,9 @@ export const ModernTemplate = forwardRef<HTMLDivElement, TemplateProps>(
             <RecipientName
               name={p.name}
               align="left"
-              width={720}
+              width={800}
               font={p.nameFont}
+              fontSize={p.nameFontSize}
             />
 
             <div className="mt-4 max-w-[720px] text-[14px] text-[#1f2536]/90 border-l-[3px] border-[#b8862e] pl-4">
@@ -683,6 +660,7 @@ export const MinimalistTemplate = forwardRef<HTMLDivElement, TemplateProps>(
             <RecipientName
               name={p.name}
               font={p.nameFont}
+              fontSize={p.nameFontSize}
               lineColor="bg-[#b8862e]"
             />
 
@@ -794,6 +772,7 @@ export const CorporateTemplate = forwardRef<HTMLDivElement, TemplateProps>(
             <RecipientName
               name={p.name}
               font={p.nameFont}
+              fontSize={p.nameFontSize}
               textColor="text-[#1f2536]"
               lineColor="bg-[#b8862e]"
             />
@@ -902,6 +881,7 @@ export const ElegantTemplate = forwardRef<HTMLDivElement, TemplateProps>(
             <RecipientName
               name={p.name}
               font={p.nameFont}
+              fontSize={p.nameFontSize}
               lineColor="bg-[#b8862e]"
             />
 
@@ -1009,8 +989,9 @@ export const GeometricTemplate = forwardRef<HTMLDivElement, TemplateProps>(
             <RecipientName
               name={p.name}
               align="left"
-              width={750}
+              width={800}
               font={p.nameFont}
+              fontSize={p.nameFontSize}
             />
 
             <div className="mt-3.5 relative">
@@ -1121,6 +1102,7 @@ export const PremiumDarkTemplate = forwardRef<HTMLDivElement, TemplateProps>(
             <RecipientName
               name={p.name}
               font={p.nameFont}
+              fontSize={p.nameFontSize}
               textColor="text-white"
               lineColor="bg-[#b8862e]"
             />
@@ -1240,6 +1222,7 @@ export const AcademicTemplate = forwardRef<HTMLDivElement, TemplateProps>(
             <RecipientName
               name={p.name}
               font={p.nameFont}
+              fontSize={p.nameFontSize}
               lineColor="bg-[#b8862e]"
             />
 
@@ -1341,8 +1324,9 @@ export const CreativeTemplate = forwardRef<HTMLDivElement, TemplateProps>(
             <RecipientName
               name={p.name}
               align="left"
-              width={560}
+              width={640}
               font={p.nameFont}
+              fontSize={p.nameFontSize}
             />
 
             <div className="mt-4 text-[13.5px] text-[#1f2536]/80 font-medium leading-relaxed">
@@ -1451,6 +1435,7 @@ export const ExecutiveTemplate = forwardRef<HTMLDivElement, TemplateProps>(
               <RecipientName
                 name={p.name}
                 font={p.nameFont}
+                fontSize={p.nameFontSize}
                 lineColor="bg-[#b8862e]"
               />
 
