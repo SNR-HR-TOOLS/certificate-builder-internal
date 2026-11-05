@@ -86,6 +86,13 @@ function normalizeProps(props: TemplateProps) {
   };
 }
 
+/* ─── Helper: Clean Period Label (Prevents Double Colons) ──────── */
+function formatPeriodLabel(label?: string, separator = ":") {
+  if (!label) return "";
+  const clean = label.replace(/[:/\-–—\s]+$/, "").trim();
+  return `${clean}${separator}`;
+}
+
 /* ─── Helper: Format & Highlight Body Text ─────────────────────── */
 function renderFormattedBody(
   text: string,
@@ -459,7 +466,7 @@ export const ClassicTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 
             {p.showPeriod && (
               <p className="mt-3 text-[13px] tracking-wide text-[#1f2536]/80">
-                {p.periodLabel}:{" "}
+                {formatPeriodLabel(p.periodLabel)}{" "}
                 <strong className="font-semibold text-[#1f2536]">
                   {p.period}
                 </strong>
@@ -577,7 +584,7 @@ export const ModernTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 
             {p.showPeriod && (
               <p className="mt-3 text-[13px] tracking-wide pl-4">
-                {p.periodLabel}:{" "}
+                {formatPeriodLabel(p.periodLabel)}{" "}
                 <strong className="font-semibold text-[#b8862e]">
                   {p.period}
                 </strong>
@@ -685,7 +692,7 @@ export const MinimalistTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 
             {p.showPeriod && (
               <p className="mt-3 text-[12px] tracking-widest text-[#7a7263] uppercase">
-                {p.periodLabel} /{" "}
+                {formatPeriodLabel(p.periodLabel)}{" "}
                 <strong className="text-[#1b1c20] font-medium">
                   {p.period}
                 </strong>
@@ -797,7 +804,7 @@ export const CorporateTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 
             {p.showPeriod && (
               <p className="mt-3 text-[13px] tracking-wide text-[#6b6657]">
-                {p.periodLabel}:{" "}
+                {formatPeriodLabel(p.periodLabel)}{" "}
                 <strong className="text-[#1f2536] font-semibold">
                   {p.period}
                 </strong>
@@ -907,7 +914,7 @@ export const ElegantTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 
             {p.showPeriod && (
               <p className="mt-3 text-[12.5px] tracking-[0.1em] uppercase text-[#33302a]/70">
-                {p.periodLabel}:{" "}
+                {formatPeriodLabel(p.periodLabel)}{" "}
                 <strong className="text-[#33302a]">{p.period}</strong>
               </p>
             )}
@@ -1015,7 +1022,7 @@ export const GeometricTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 
             {p.showPeriod && (
               <p className="mt-3 text-[13px] font-medium tracking-wide">
-                {p.periodLabel}:{" "}
+                {formatPeriodLabel(p.periodLabel)}{" "}
                 <span className="font-bold text-[#b8862e]">{p.period}</span>
               </p>
             )}
@@ -1124,7 +1131,7 @@ export const PremiumDarkTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 
             {p.showPeriod && (
               <p className="mt-3 text-[13px] tracking-wide text-[#f8f9fa]/60">
-                {p.periodLabel}:{" "}
+                {formatPeriodLabel(p.periodLabel)}{" "}
                 <span className="text-[#b8862e] font-medium">{p.period}</span>
               </p>
             )}
@@ -1242,7 +1249,7 @@ export const AcademicTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 
             {p.showPeriod && (
               <p className="mt-3 text-[13.5px] font-semibold text-[#1f2536]">
-                {p.periodLabel}:{" "}
+                {formatPeriodLabel(p.periodLabel)}{" "}
                 <span className="text-[#b8862e]">{p.period}</span>
               </p>
             )}
@@ -1344,7 +1351,7 @@ export const CreativeTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 
             {p.showPeriod && (
               <p className="mt-3 text-[13px] font-bold text-[#1f2536]">
-                {p.periodLabel}:{" "}
+                {formatPeriodLabel(p.periodLabel)}{" "}
                 <span className="text-[#b8862e]">{p.period}</span>
               </p>
             )}
@@ -1453,7 +1460,7 @@ export const ExecutiveTemplate = forwardRef<HTMLDivElement, TemplateProps>(
 
               {p.showPeriod && (
                 <p className="mt-3 text-[13.5px] font-bold tracking-wide">
-                  {p.periodLabel}:{" "}
+                  {formatPeriodLabel(p.periodLabel)}{" "}
                   <span className="text-[#b8862e]">{p.period}</span>
                 </p>
               )}
