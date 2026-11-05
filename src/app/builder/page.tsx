@@ -751,6 +751,110 @@ export default function BuilderPage() {
               qrDataUrl={qrDataUrl}
             />
           </div>
+
+          {/* ── Quick Edit Key Details Bar (Instant Access) ─────────── */}
+          <div className="w-full max-w-[1100px] mt-3 bg-white p-4 rounded-xl border border-[#d8d4c8] shadow-sm flex flex-col gap-3 print:hidden">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <PenLine className="w-4 h-4 text-[#b8862e]" />
+                <span className="font-bold text-xs uppercase tracking-wider text-[#1f2536]">
+                  Quick Edit Essential Fields
+                </span>
+              </div>
+              <span className="text-[11px] text-[#6b6657]">
+                Edit recipient, change &apos;Training Period&apos; name, or
+                adjust dates directly
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Recipient Name */}
+              <div>
+                <label className="block text-[10px] font-bold text-[#6b6657] uppercase tracking-wider mb-1">
+                  Recipient Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full border border-[#d8d4c8] rounded-md px-3 py-1.5 text-xs font-semibold text-[#1f2536] focus:ring-2 focus:ring-[#b8862e] outline-none bg-[#fdfbf7]"
+                  placeholder="D. Karthik"
+                />
+              </div>
+
+              {/* Period Field Name (Label) */}
+              <div>
+                <label className="block text-[10px] font-bold text-[#6b6657] uppercase tracking-wider mb-1">
+                  Period Field Name
+                </label>
+                <input
+                  type="text"
+                  value={periodLabel}
+                  onChange={(e) => setPeriodLabel(e.target.value)}
+                  className="w-full border border-[#d8d4c8] rounded-md px-3 py-1.5 text-xs font-semibold text-[#1f2536] focus:ring-2 focus:ring-[#b8862e] outline-none bg-[#fdfbf7]"
+                  placeholder="e.g. Training Period, Program Duration"
+                />
+              </div>
+
+              {/* Period Dates */}
+              <div>
+                <label className="block text-[10px] font-bold text-[#6b6657] uppercase tracking-wider mb-1">
+                  Period Dates
+                </label>
+                <input
+                  type="text"
+                  value={period}
+                  onChange={(e) => setPeriod(e.target.value)}
+                  className="w-full border border-[#d8d4c8] rounded-md px-3 py-1.5 text-xs font-semibold text-[#1f2536] focus:ring-2 focus:ring-[#b8862e] outline-none bg-[#fdfbf7]"
+                  placeholder="e.g. 01 May 2026 – 15 May 2026"
+                />
+              </div>
+
+              {/* Certificate ID */}
+              <div>
+                <label className="block text-[10px] font-bold text-[#6b6657] uppercase tracking-wider mb-1">
+                  Certificate ID
+                </label>
+                <input
+                  type="text"
+                  value={serial}
+                  onChange={(e) => setSerial(e.target.value)}
+                  className="w-full border border-[#d8d4c8] rounded-md px-3 py-1.5 text-xs font-mono font-semibold text-[#1f2536] focus:ring-2 focus:ring-[#b8862e] outline-none bg-[#fdfbf7]"
+                  placeholder="SNR-CMMI-2026-0842"
+                />
+              </div>
+            </div>
+
+            {/* Quick Suggestions for Period Label */}
+            <div className="pt-2 border-t border-[#e6e1d2] flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6b6657] shrink-0">
+                Replace &apos;Training Period&apos; with:
+              </span>
+              {[
+                "Training Period",
+                "Program Duration",
+                "Awareness Period",
+                "Training & Awareness Period",
+                "Program Period",
+                "Assessment Period",
+                "Period of Participation",
+                "Conducted On",
+              ].map((sug) => (
+                <button
+                  key={sug}
+                  type="button"
+                  onClick={() => setPeriodLabel(sug)}
+                  className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors border ${
+                    periodLabel.trim() === sug
+                      ? "bg-[#1f2536] text-white border-[#1f2536]"
+                      : "bg-[#f6f2e7] text-[#1f2536] border-[#d8d4c8] hover:border-[#b8862e]"
+                  }`}
+                >
+                  {sug}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* ── Customization Studio Panel ───────────────────────────── */}
@@ -1069,32 +1173,86 @@ export default function BuilderPage() {
                   </div>
 
                   {/* Duration / Period */}
-                  <div className="md:col-span-2 pt-2 border-t border-[#e6e1d2]">
+                  <div className="md:col-span-2 pt-3 border-t border-[#e6e1d2] bg-[#fbf8f0] p-4 rounded-xl border border-[#d8d4c8]">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <Label>Program Duration / Period</Label>
+                        <Label>Program Duration &amp; Period Customization</Label>
                         <p className="text-[11px] text-[#6b6657]">
-                          Show duration dates (e.g. Training Period: 01 May 2026
-                          – 15 May 2026)
+                          Customize the field name (&quot;Training Period:&quot;)
+                          or change it to any other name (e.g. Program Duration,
+                          Awareness Period)
                         </p>
                       </div>
                       <Switch checked={showPeriod} onChange={setShowPeriod} />
                     </div>
 
                     {showPeriod && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Field
-                          label="Period Label"
-                          value={periodLabel}
-                          onChange={setPeriodLabel}
-                          hint="e.g. Training Period, Internship Period, Duration"
-                        />
-                        <Field
-                          label="Period Dates"
-                          value={period}
-                          onChange={setPeriod}
-                          hint="e.g. 01 May 2026 – 15 May 2026"
-                        />
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label>Period Field Name / Label</Label>
+                            <input
+                              type="text"
+                              value={periodLabel}
+                              onChange={(e) => setPeriodLabel(e.target.value)}
+                              placeholder="e.g. Training Period, Program Duration"
+                              className="w-full border border-[#d8d4c8] rounded-md px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b8862e] bg-white font-medium text-[#1f2536]"
+                            />
+                            <p className="text-[11px] text-[#6b6657] mt-1">
+                              Custom name that appears before the dates on the
+                              certificate
+                            </p>
+                          </div>
+
+                          <div>
+                            <Label>Period Dates / Value</Label>
+                            <input
+                              type="text"
+                              value={period}
+                              onChange={(e) => setPeriod(e.target.value)}
+                              placeholder="e.g. 01 May 2026 – 15 May 2026"
+                              className="w-full border border-[#d8d4c8] rounded-md px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b8862e] bg-white font-medium text-[#1f2536]"
+                            />
+                            <p className="text-[11px] text-[#6b6657] mt-1">
+                              Date range or duration string
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Quick Name Suggestions */}
+                        <div>
+                          <span className="text-[10.5px] font-bold uppercase tracking-wider text-[#6b6657] block mb-1.5">
+                            Quick-Select Field Name (1-Click Apply):
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              "Training Period",
+                              "Program Duration",
+                              "Awareness Period",
+                              "Training & Awareness Period",
+                              "Program Period",
+                              "Assessment Period",
+                              "Period of Participation",
+                              "Certification Period",
+                              "Conducted On",
+                              "Internship Period",
+                              "Duration",
+                            ].map((suggestedLabel) => (
+                              <button
+                                key={suggestedLabel}
+                                type="button"
+                                onClick={() => setPeriodLabel(suggestedLabel)}
+                                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all border ${
+                                  periodLabel.trim() === suggestedLabel
+                                    ? "bg-[#1f2536] text-white border-[#1f2536] shadow-xs"
+                                    : "bg-white text-[#1f2536] border-[#d8d4c8] hover:border-[#b8862e] hover:bg-[#faf8f2]"
+                                }`}
+                              >
+                                {suggestedLabel}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
