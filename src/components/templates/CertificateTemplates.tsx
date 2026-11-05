@@ -1,7 +1,7 @@
 "use client";
 
 import snrWatermark from "@/assets/snr-logo-without-bg-water-mark.png";
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { forwardRef } from "react";
 
 export interface TemplateProps {
   // Brand & Header

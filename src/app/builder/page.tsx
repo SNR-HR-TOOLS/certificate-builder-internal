@@ -329,6 +329,9 @@ export default function BuilderPage() {
     setPresentationLine(preset.presentationLine);
     setName(preset.recipientName);
     setNameFont(preset.nameFont);
+    setNameFontSize(
+      preset.nameFont === "script" ? 54 : preset.nameFont === "serif" ? 44 : 38,
+    );
     setBody(preset.body);
     setShowPeriod(preset.showPeriod);
     setPeriodLabel(preset.periodLabel);
@@ -733,6 +736,7 @@ export default function BuilderPage() {
               presentationLine={presentationLine}
               name={name}
               nameFont={nameFont}
+              nameFontSize={nameFontSize}
               body={body}
               periodLabel={periodLabel}
               period={period}
@@ -771,9 +775,37 @@ export default function BuilderPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {/* Recipient Name */}
               <div>
-                <label className="block text-[10px] font-bold text-[#6b6657] uppercase tracking-wider mb-1">
-                  Recipient Name
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[10px] font-bold text-[#6b6657] uppercase tracking-wider">
+                    Recipient Name
+                  </label>
+                  <div className="flex items-center gap-1 text-[10px] text-[#6b6657]">
+                    <span>Size:</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNameFontSize((s) => Math.max(28, s - 2))
+                      }
+                      className="w-4 h-4 rounded bg-[#f6f2e7] hover:bg-[#ece6d5] border border-[#d8d4c8] flex items-center justify-center font-bold"
+                      title="Decrease font size"
+                    >
+                      -
+                    </button>
+                    <span className="font-mono font-bold text-[#1f2536] w-6 text-center">
+                      {nameFontSize}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNameFontSize((s) => Math.min(76, s + 2))
+                      }
+                      className="w-4 h-4 rounded bg-[#f6f2e7] hover:bg-[#ece6d5] border border-[#d8d4c8] flex items-center justify-center font-bold"
+                      title="Increase font size"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
                 <input
                   type="text"
                   value={name}
@@ -1061,7 +1093,12 @@ export default function BuilderPage() {
                     ].map((f) => (
                       <button
                         key={f.id}
-                        onClick={() => setNameFont(f.id)}
+                        onClick={() => {
+                          setNameFont(f.id);
+                          setNameFontSize(
+                            f.id === "script" ? 54 : f.id === "serif" ? 44 : 38,
+                          );
+                        }}
                         className={`p-3 rounded-lg border text-left transition-all ${
                           nameFont === f.id
                             ? "border-[#b8862e] bg-[#f9f5ec] ring-1 ring-[#b8862e]"
@@ -1082,6 +1119,51 @@ export default function BuilderPage() {
                         </div>
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Recipient Font Size Control */}
+                <div className="pt-4 border-t border-[#e6e1d2]">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div>
+                      <Label>
+                        Recipient Name Font Size (Fixed &amp; Consistent)
+                      </Label>
+                      <p className="text-[11px] text-[#6b6657]">
+                        Locks font size so it remains strictly consistent and
+                        never shrinks while entering names
+                      </p>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-[#b8862e] bg-[#b8862e]/10 px-2.5 py-0.5 rounded border border-[#b8862e]/30">
+                      {nameFontSize}px
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={30}
+                      max={76}
+                      value={nameFontSize}
+                      onChange={(e) => setNameFontSize(Number(e.target.value))}
+                      className="w-full accent-[#b8862e] cursor-pointer"
+                    />
+                    <div className="flex gap-1 shrink-0">
+                      {[40, 48, 54, 62, 70].map((sz) => (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => setNameFontSize(sz)}
+                          className={`px-2 py-0.5 text-[10px] font-semibold rounded border transition-colors ${
+                            nameFontSize === sz
+                              ? "bg-[#1f2536] text-white border-[#1f2536]"
+                              : "bg-white text-[#1f2536] border-[#d8d4c8] hover:bg-[#f6f2e7]"
+                          }`}
+                        >
+                          {sz}px
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
