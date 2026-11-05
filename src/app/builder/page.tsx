@@ -92,17 +92,17 @@ interface Preset {
 const PRESETS: Preset[] = [
   {
     id: "cmmi-level-5",
-    name: "CMMI Level 5 Participation",
+    name: "CMMI Level 5 Recognition",
     categoryBadge: "Primary Preset",
     badgeStyle: "bg-[#b8862e]/15 text-[#b8862e] border-[#b8862e]/40",
     description:
-      "SNR Edatas CMMI Level 5 Training / Awareness Program Participation Certificate",
-    title: "CERTIFICATE OF PARTICIPATION",
+      "SNR Edatas CMMI Level 5 Program Recognition of Completion Certificate",
+    title: "RECOGNITION OF COMPLETION",
     subtitle: "CMMI LEVEL 5",
     presentationLine: "This certificate is proudly presented to",
     recipientName: "D. Karthik",
     nameFont: "script",
-    body: "In recognition of successful participation in the\nCMMI Level 5 Training / Awareness Program\nOrganized by SNR Edatas Private Limited, acknowledging their participation and commitment to understanding process excellence, continuous improvement and organizational maturity practices.",
+    body: "In recognition of successful completion in the\nCMMI Level 5 Program\nConducted by SNR Edatas Private Limited, acknowledging their commitment to understanding process excellence, continuous improvement and organizational maturity practices.",
     periodLabel: "Training Period",
     period: "01 May 2026 – 15 May 2026",
     showPeriod: true,
@@ -225,7 +225,7 @@ const PRESETS: Preset[] = [
     badgeStyle: "bg-slate-100 text-slate-800 border-slate-200",
     description:
       "Fully configurable for ANY certification, diploma, workshop, or award",
-    title: "CERTIFICATE OF PARTICIPATION",
+    title: "RECOGNITION OF COMPLETION",
     subtitle: "SPECIAL CERTIFICATION",
     presentationLine: "This certificate is proudly presented to",
     recipientName: "Participant Name",
@@ -772,7 +772,21 @@ export default function BuilderPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {/* Certificate Title */}
+              <div>
+                <label className="block text-[10px] font-bold text-[#6b6657] uppercase tracking-wider mb-1">
+                  Certificate Title
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full border border-[#d8d4c8] rounded-md px-3 py-1.5 text-xs font-semibold text-[#1f2536] focus:ring-2 focus:ring-[#b8862e] outline-none bg-[#fdfbf7]"
+                  placeholder="RECOGNITION OF COMPLETION"
+                />
+              </div>
+
               {/* Recipient Name */}
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -856,6 +870,33 @@ export default function BuilderPage() {
                   placeholder="SNR-CMMI-2026-0842"
                 />
               </div>
+            </div>
+
+            {/* Quick Suggestions for Certificate Title */}
+            <div className="pt-2 border-t border-[#e6e1d2] flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6b6657] shrink-0">
+                Title Presets:
+              </span>
+              {[
+                "RECOGNITION OF COMPLETION",
+                "CERTIFICATE OF PARTICIPATION",
+                "CERTIFICATE OF COMPLETION",
+                "CERTIFICATE OF EXCELLENCE",
+                "CERTIFICATE OF APPRECIATION",
+              ].map((sug) => (
+                <button
+                  key={sug}
+                  type="button"
+                  onClick={() => setTitle(sug)}
+                  className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors border ${
+                    title.trim() === sug
+                      ? "bg-[#1f2536] text-white border-[#1f2536]"
+                      : "bg-[#f6f2e7] text-[#1f2536] border-[#d8d4c8] hover:border-[#b8862e]"
+                  }`}
+                >
+                  {sug}
+                </button>
+              ))}
             </div>
 
             {/* Quick Suggestions for Period Label */}
@@ -1213,12 +1254,36 @@ export default function BuilderPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field
-                    label="Certificate Title"
-                    value={title}
-                    onChange={setTitle}
-                    hint="e.g. CERTIFICATE OF PARTICIPATION, CERTIFICATE OF INTERNSHIP"
-                  />
+                  <div>
+                    <Field
+                      label="Certificate Title"
+                      value={title}
+                      onChange={setTitle}
+                      hint="e.g. RECOGNITION OF COMPLETION, CERTIFICATE OF PARTICIPATION"
+                    />
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {[
+                        "RECOGNITION OF COMPLETION",
+                        "CERTIFICATE OF PARTICIPATION",
+                        "CERTIFICATE OF COMPLETION",
+                        "CERTIFICATE OF EXCELLENCE",
+                        "CERTIFICATE OF APPRECIATION",
+                      ].map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setTitle(t)}
+                          className={`px-2 py-0.5 text-[10px] rounded border transition-colors ${
+                            title === t
+                              ? "bg-[#1f2536] text-white border-[#1f2536] font-semibold"
+                              : "bg-[#fdfbf7] text-[#1f2536] border-[#d8d4c8] hover:border-[#b8862e]"
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <Field
                     label="Program / Track Badge (Subtitle)"
                     value={subtitle}
@@ -1242,17 +1307,28 @@ export default function BuilderPage() {
                   <div className="md:col-span-2">
                     <div className="flex items-center justify-between mb-1">
                       <Label>Recognition Description / Body Text</Label>
-                      <span className="text-[11px] text-[#6b6657]">
-                        SNR Edatas &amp; CMMI Level 5 are automatically
-                        highlighted in bold
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setBody(
+                            "In recognition of successful completion in the\nCMMI Level 5 Program\nConducted by SNR Edatas Private Limited, acknowledging their commitment to understanding process excellence, continuous improvement and organizational maturity practices.",
+                          )
+                        }
+                        className="text-[11px] text-[#b8862e] hover:underline font-medium"
+                      >
+                        Reset to CMMI Level 5 Standard Text
+                      </button>
                     </div>
                     <textarea
                       value={body}
                       onChange={(e) => setBody(e.target.value)}
                       rows={5}
-                      className="w-full border border-[#d8d4c8] rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b8862e] bg-white leading-relaxed"
+                      className="w-full border border-[#d8d4c8] rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b8862e] bg-white leading-relaxed font-normal"
                     />
+                    <span className="text-[11px] text-[#6b6657] mt-1 block">
+                      SNR Edatas &amp; CMMI Level 5 are automatically highlighted
+                      in bold across all templates
+                    </span>
                   </div>
 
                   {/* Duration / Period */}

@@ -59,14 +59,16 @@ function normalizeProps(props: TemplateProps) {
   return {
     logo: props.logo,
     organization: props.organization ?? "SNR Edatas Private Limited",
-    title: props.title || "CERTIFICATE OF PARTICIPATION",
+    title: props.title || "RECOGNITION OF COMPLETION",
     subtitle: props.subtitle ?? "",
     presentationLine:
       props.presentationLine ?? "This certificate is proudly presented to",
     name: props.name || "Recipient Name",
     nameFont: props.nameFont ?? "script",
     nameFontSize: props.nameFontSize,
-    body: props.body || "",
+    body:
+      props.body ||
+      "In recognition of successful completion in the\nCMMI Level 5 Program\nConducted by SNR Edatas Private Limited, acknowledging their commitment to understanding process excellence, continuous improvement and organizational maturity practices.",
     periodLabel: props.periodLabel ?? "Training Period",
     period: props.period ?? "",
     showPeriod: props.showPeriod !== false && Boolean(props.period),
@@ -185,9 +187,7 @@ function RecipientName({
         {name || "\u00A0"}
       </h2>
       {showUnderline && (
-        <div
-          className={`mt-2 h-[1.5px] ${lineColor} w-64 max-w-[80%]`}
-        />
+        <div className={`mt-2 h-[1.5px] ${lineColor} w-64 max-w-[80%]`} />
       )}
     </div>
   );

@@ -23,7 +23,7 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: "SNR EDATAS CERTIFICATE STUDIO",
   description:
-    "Enterprise certificate builder and verification portal for SNR Edatas Private Limited. Generate CMMI Level 5, Participation, Internship, and custom certificates.",
+    "Enterprise certificate builder and verification portal for SNR Edatas Private Limited. Generate CMMI Level 5, Recognition of Completion, Participation, Internship, and custom certificates.",
   icons: {
     icon: "/icon.png",
     shortcut: "/icon.png",

@@ -41,7 +41,7 @@ function VerifyContent() {
   const s = {
     name: searchParams.get("name") ?? undefined,
     serial: searchParams.get("serial") ?? undefined,
-    title: searchParams.get("title") ?? "CERTIFICATE OF PARTICIPATION",
+    title: searchParams.get("title") ?? "RECOGNITION OF COMPLETION",
     subtitle: searchParams.get("subtitle") ?? undefined,
     date: searchParams.get("date") ?? undefined,
     periodLabel: searchParams.get("periodLabel") ?? "Training Period",
